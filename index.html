@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-
 <script>
 (function() {
-  const HASH = '7a6f7e2b4c1d9e8f3a2b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e';
   function hashStr(s) {
     let h = 0;
     for (let i = 0; i < s.length; i++) { h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; }
@@ -25,8 +23,7 @@
   }
   window.checkLogin = checkLogin;
   
-  // Sprawdź czy już zalogowany
-  if (sessionStorage.getItem('kmbno_auth') === CORRECT) {
+  if (sessionStorage.getItem('kmbno_auth') === hashStr('Sprzedaż2026!')) {
     document.addEventListener('DOMContentLoaded', () => {
       const s = document.getElementById('loginScreen');
       if (s) s.style.display = 'none';
@@ -34,7 +31,6 @@
   }
 })();
 </script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Generator Umów — KMBNO</title>
@@ -896,8 +892,8 @@ async function loadProperties() {
   const hint = document.getElementById('propLoadHint');
   if (hint) hint.textContent = 'Pobieranie nieruchomości z Monday...';
   try {
-    // Pobierz nieruchomości z Monday - tablica 💰 Sprzedaż 5030474510
-    // Name = adres, lookup_mkya4a90 = Księga wieczysta (mirror)
+    // Tablica 💰 Sprzedaż - Name = adres
+    // KW jest mirror z tablicy Nieruchomości - pobieramy przez linked_items
     let cursor = null;
     const fetched = [];
     do {
@@ -905,27 +901,42 @@ async function loadProperties() {
       const res = await fetch('https://api.monday.com/v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': TOKEN, 'API-Version': '2024-01' },
-        body: JSON.stringify({ query: `{boards(ids:[5030474510]){items_page(limit:500${cursorStr}){cursor items{id name column_values(ids:["lookup_mkya4a90"]){id text}}}}}` })
+        body: JSON.stringify({ query: `{
+          boards(ids:[5030474510]) {
+            items_page(limit:200${cursorStr}) {
+              cursor
+              items {
+                id
+                name
+                linked_items(link_to_item_column_id: "board_relation_mkwye329") {
+                  column_values(ids: ["text_mkx1kadg"]) {
+                    id
+                    text
+                  }
+                }
+              }
+            }
+          }
+        }` })
       });
       const data = await res.json();
       const page = data?.data?.boards?.[0]?.items_page;
       if (!page) break;
       page.items.forEach(item => {
         if (!item.name || item.name.trim() === '') return;
-        const kw = item.column_values?.[0]?.text || '';
+        // KW z pierwszego powiązanego elementu w tablicy Nieruchomości
+        const kw = item.linked_items?.[0]?.column_values?.[0]?.text || '';
         fetched.push({ id: item.id, name: item.name.trim(), kw });
       });
       cursor = page.cursor || null;
     } while (cursor);
 
     if (fetched.length > 0) {
-      // Połącz z lokalną listą (bez duplikatów)
       const mondayNames = new Set(fetched.map(p => p.name.toLowerCase()));
       const localOnly = PROPERTIES_DATA.filter(p => !mondayNames.has(p.name.toLowerCase()));
       properties = [...fetched, ...localOnly];
       if (hint) hint.textContent = `${properties.length} nieruchomości (${fetched.length} z Monday)`;
     } else {
-      // Fallback na lokalne dane + window.storage
       const raw = await storageGet('kmbno_extra_props');
       const extra = raw ? JSON.parse(raw) : [];
       properties = [...PROPERTIES_DATA, ...extra];

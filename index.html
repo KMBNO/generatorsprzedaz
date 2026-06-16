@@ -1,0 +1,2593 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+
+<script>
+(function() {
+  const HASH = '7a6f7e2b4c1d9e8f3a2b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e';
+  function hashStr(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) { h = (Math.imul(31, h) + s.charCodeAt(i)) | 0; }
+    return Math.abs(h).toString(16);
+  }
+  const CORRECT = hashStr('Sprzedaż2026!');
+  
+  function checkLogin() {
+    const pw = document.getElementById('loginPassword').value;
+    if (hashStr(pw) === CORRECT) {
+      sessionStorage.setItem('kmbno_auth', CORRECT);
+      document.getElementById('loginScreen').style.display = 'none';
+    } else {
+      document.getElementById('loginError').textContent = 'Nieprawidłowe hasło';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginPassword').focus();
+    }
+  }
+  window.checkLogin = checkLogin;
+  
+  // Sprawdź czy już zalogowany
+  if (sessionStorage.getItem('kmbno_auth') === CORRECT) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = document.getElementById('loginScreen');
+      if (s) s.style.display = 'none';
+    });
+  }
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator Umów — KMBNO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #f0efe9;
+  --border: #e0ddd5;
+  --border2: #ccc9be;
+  --text: #1a1916;
+  --text2: #6b6860;
+  --text3: #a8a59e;
+  --accent: #1a1916;
+  --accent-bg: #1a1916;
+  --accent-text: #f5f4f0;
+  --green: #2d6a4f;
+  --green-bg: #eaf4ee;
+  --green-border: #b7dfc7;
+  --red: #c0392b;
+  --red-bg: #fdf0ef;
+  --warn-bg: #fef9ec;
+  --warn-border: #f0d87c;
+  --warn-text: #7a6200;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+header {
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header .logo {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+header .subtitle {
+  font-size: 12px;
+  opacity: 0.5;
+  font-family: 'DM Mono', monospace;
+}
+
+.nav-tab {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .15s;
+}
+.nav-tab.active {
+  background: #ffffff;
+  color: #1a1916;
+  border-color: #ffffff;
+}
+
+.app {
+  display: flex;
+  height: calc(100vh - 53px);
+}
+
+.sidebar {
+  width: 360px;
+  min-width: 360px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 0;
+}
+
+.sidebar-inner {
+  padding: 20px;
+}
+
+.preview-pane {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 32px;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.section:last-child { border-bottom: none; margin-bottom: 0; }
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+/* Radio pills */
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill {
+  padding: 5px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 100px;
+  font-size: 12px;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text2);
+  transition: all 0.15s;
+  user-select: none;
+}
+.pill:hover { border-color: var(--text); color: var(--text); }
+.pill.active {
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  border-color: var(--accent-bg);
+}
+.pills.col { flex-direction: column; }
+.pills.col .pill { border-radius: var(--radius); }
+
+/* Form elements */
+.field { margin-top: 10px; }
+.field:first-child { margin-top: 0; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text2);
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+input[type=text], input[type=number], input[type=date], select, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--text); }
+
+/* Rep cards */
+.rep-card {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: all 0.15s;
+  background: var(--surface);
+}
+.rep-card:hover { border-color: var(--border2); background: var(--surface2); }
+.rep-card.selected {
+  border-color: var(--text);
+  background: var(--surface2);
+}
+.rep-card .rn { font-size: 13px; font-weight: 500; }
+.rep-card .rd { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+/* Search dropdown */
+.search-wrap { position: relative; }
+.dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+}
+.dropdown.open { display: block; }
+.dd-item {
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.dd-item:last-child { border-bottom: none; }
+.dd-item:hover { background: var(--surface2); }
+.dd-item .dn { font-size: 13px; font-weight: 500; }
+.dd-item .da { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+.selected-badge {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--green);
+  display: none;
+}
+
+/* Hint */
+.hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* Deposit pct */
+#depositPct { font-size: 11px; color: var(--green); margin-top: 3px; font-family: 'DM Mono', monospace; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); background: var(--surface); position: sticky; bottom: 0; }
+.btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.btn-primary {
+  background: var(--accent-bg);
+  color: var(--accent-text);
+}
+.btn-primary:hover { opacity: 0.85; }
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border2);
+}
+.btn-secondary:hover { background: var(--surface2); }
+
+/* Contract */
+.contract-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 48px 56px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.contract-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 20px;
+  max-width: 760px;
+  margin: 0 auto 20px;
+}
+
+.contract {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--text);
+}
+.contract h3 {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'DM Sans', sans-serif;
+}
+.contract .sub {
+  font-size: 12px;
+  text-align: center;
+  color: var(--text2);
+  margin-bottom: 24px;
+  font-family: 'DM Sans', sans-serif;
+}
+.contract .par { margin-bottom: 14px; font-family: 'DM Sans', sans-serif; }
+.contract .par-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+}
+.blank {
+  display: inline;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 0 1px;
+}
+.blank.f {
+  display: inline;
+  color: var(--text);
+  font-style: normal;
+  border-bottom: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  padding: 0;
+}
+.contract ul { padding-left: 20px; font-family: 'DM Sans', sans-serif; }
+.contract ul li { margin-bottom: 5px; font-family: 'DM Sans', sans-serif; }
+.contract p { font-family: 'DM Sans', sans-serif; }
+.contract .sig {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 48px;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+}
+.contract .sig div { text-align: center; width: 44%; }
+.contract .sig .line {
+  border-top: 1px solid var(--border2);
+  padding-top: 6px;
+  margin-top: 32px;
+  color: var(--text2);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text3);
+  gap: 8px;
+  min-height: 400px;
+}
+.empty-state .icon {
+  font-size: 32px;
+  opacity: 0.3;
+}
+.empty-state p { font-size: 13px; }
+
+.loading-badge {
+  font-size: 11px;
+  color: var(--text3);
+  font-style: italic;
+  margin-top: 6px;
+}
+
+.kw-row { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.kw-row input { flex: 1; }
+.kw-link {
+  display: none;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 500;
+}
+.kw-link:hover { text-decoration: underline; }
+.kw-link.visible { display: inline-block; }
+
+@media print {
+  @page { margin: 20mm 22mm; size: A4; }
+  header, .sidebar, .contract-actions, .btn-row { display: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { height: auto; background: white !important; font-family: Arial, sans-serif !important; }
+  .app { height: auto; display: block; overflow: visible; }
+  .preview-pane { padding: 0 !important; background: white !important; overflow: visible; max-height: none; }
+  .contract-wrap {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .contract, .contract p, .contract li, .contract ul {
+    font-family: Arial, sans-serif !important;
+    font-size: 11pt !important;
+    line-height: 1.6 !important;
+    color: #000 !important;
+  }
+  .par { page-break-inside: avoid; break-inside: avoid; }
+  .par-title { page-break-after: avoid !important; break-after: avoid !important; }
+  .par li:first-child { page-break-before: avoid; break-before: avoid; }
+  .contract ul { orphans: 2; widows: 2; }
+  .contract h3 {
+    font-size: 12pt !important;
+    font-family: Arial, sans-serif !important;
+    margin-bottom: 4pt;
+  }
+  .contract .sub {
+    font-size: 10pt !important;
+    color: #333 !important;
+    margin-bottom: 14pt;
+  }
+  .contract .par { margin-bottom: 10pt; }
+  .contract .par-title { font-size: 11pt !important; }
+  .blank { border-bottom: 1px solid #555 !important; color: #555 !important; min-width: 70pt; }
+  .blank.f { border-bottom: none !important; color: #000 !important; font-style: normal !important; font-family: Arial, sans-serif !important; }
+  .contract .sig { margin-top: 30pt; }
+  .contract .sig .line { margin-top: 24pt; }
+  .empty-state { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="position:fixed;inset:0;background:#1a1916;display:flex;align-items:center;justify-content:center;z-index:9999;font-family:'DM Sans',sans-serif">
+  <div style="background:#2a2925;border:1px solid #3a3835;border-radius:12px;padding:40px 48px;width:340px;text-align:center">
+    <div style="font-size:28px;margin-bottom:8px">🏠</div>
+    <div style="font-size:18px;font-weight:600;color:#f5f4f0;margin-bottom:4px">KMBNO</div>
+    <div style="font-size:12px;color:#8a8880;margin-bottom:28px">Generator Umów Przedwstępnych</div>
+    <input type="password" id="loginPassword" placeholder="Hasło dostępu..." 
+      style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid #3a3835;background:#1a1916;color:#f5f4f0;font-size:14px;font-family:inherit;box-sizing:border-box;outline:none;margin-bottom:10px"
+      onkeydown="if(event.key==='Enter') checkLogin()">
+    <div id="loginError" style="color:#df2f4a;font-size:12px;margin-bottom:10px;min-height:18px"></div>
+    <button onclick="checkLogin()" 
+      style="width:100%;padding:10px;background:#f5f4f0;color:#1a1916;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">
+      Zaloguj się
+    </button>
+  </div>
+</div>
+
+
+<header>
+  <div class="logo">KMBNO — Generator Umów Przedwstępnych</div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <button id="navGenerator" class="nav-tab active" onclick="switchView('generator')">📄 Generator</button>
+    <button id="navDocs" class="nav-tab" onclick="switchView('docs')">📁 Dokumenty</button>
+  </div>
+  <div class="subtitle">v2.0 · Monday.com API</div>
+</header>
+
+<div class="app">
+<div class="sidebar">
+<div class="sidebar-inner">
+
+<div class="section">
+  <div class="section-title">Tryb podpisania</div>
+  <div class="pills" id="modeGroup">
+    <div class="pill active" data-val="remote">Zdalnie</div>
+    <div class="pill" data-val="local">Na miejscu</div>
+  </div>
+</div>
+
+<div class="section" id="repSection">
+  <div class="section-title">Pełnomocnik KMBNO</div>
+  <div id="repContent"><div class="loading-badge">Ładowanie...</div></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Forma własności</div>
+  <div class="pills col" id="ownershipGroup">
+    <div class="pill active" data-val="full">Pełna własność (odrębna KW)</div>
+    <div class="pill" data-val="coop">Spółdzielcze własnościowe prawo do lokalu</div>
+    <div class="pill" data-val="land">Nieruchomość gruntowa zabudowana</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Kupujący</div>
+  <div class="pills" id="buyersGroup">
+    <div class="pill active" data-val="1">1 osoba</div>
+    <div class="pill" data-val="2">2 osoby</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Data zawarcia umowy</div>
+  <div class="field">
+    <input type="date" id="contractDate">
+    <div class="hint">Domyślnie: dzisiaj. Zmień jeśli potrzeba.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Wybierz nieruchomość</span>
+    <label id="importExcelBtn" style="padding:3px 10px;font-size:11px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-weight:500;white-space:nowrap">
+      ⬆ Dodaj z Excel
+      <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importPropertiesExcel(this)">
+    </label>
+  </div>
+  <div class="search-wrap" style="position:relative">
+    <input type="text" id="propSearch" placeholder="Szukaj po adresie..." oninput="searchProp(this.value)" onfocus="searchProp(this.value)" autocomplete="off">
+    <div class="dropdown" id="propDropdown"></div>
+  </div>
+  <div id="propBadge" style="display:none;margin-top:6px;padding:7px 10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius);font-size:11px;color:var(--green)"></div>
+  <div class="hint" id="propLoadHint" style="margin-top:4px"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Dane nieruchomości <span style="font-size:10px;font-weight:400;color:var(--text3)">(weryfikuj z EKW)</span></div>
+  <div id="propertyFields"></div>
+  <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text2)">
+      <input type="checkbox" id="hasExtraDesc" onchange="toggleExtraDesc()" style="width:15px;height:15px;accent-color:var(--accent);cursor:pointer">
+      Dodaj udział w dodatkowej nieruchomości (§1)
+    </label>
+    <div id="extraDescWrap" style="display:none;margin-top:8px">
+      <div class="hint" style="margin-bottom:5px">Tekst zostanie dołączony do pierwszego punktu §1, zakończony automatycznie: <em>zwanych dalej łącznie Nieruchomością.</em></div>
+      <textarea id="pExtraDesc" rows="3" placeholder="np. oraz 15/1500 części udziału w nieruchomości gruntowej o numerze 27/1, dla której prowadzona jest księga wieczysta numer PO1G/00075372/9" style="width:100%;resize:vertical;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;line-height:1.4;box-sizing:border-box"></textarea>
+    </div>
+  </div>
+</div>
+
+
+<div class="section">
+  <div class="section-title">Cena i zadatek</div>
+  <div class="field">
+    <label>Cena sprzedaży (PLN)</label>
+    <input type="number" id="price" placeholder="np. 149000" oninput="updateDeposit()">
+  </div>
+  <div class="field">
+    <label>Zadatek (PLN)</label>
+    <input type="number" id="deposit" placeholder="np. 10000" oninput="updateDeposit()">
+    <div id="depositPct"></div>
+  </div>
+  <div class="field">
+    <label>Termin zawarcia umowy przyrzeczonej</label>
+    <input type="date" id="deadline">
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Stan nieruchomości</div>
+  <div class="field">
+    <select id="condition" onchange="toggleCustom()">
+      <option value="remont">Stan do remontu</option>
+      <option value="odswiezenie">Stan do odświeżenia</option>
+      <option value="generalny">Stan do generalnego remontu</option>
+      <option value="custom">Własny opis...</option>
+    </select>
+  </div>
+  <div class="field" id="conditionCustomWrap" style="display:none">
+    <input type="text" id="conditionCustom" placeholder="Opisz stan nieruchomości...">
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Dodatkowe punkty w §1 <span style="font-size:10px;font-weight:400;color:var(--text3)">(opcjonalne)</span></div>
+  <div id="extraBulletsWrap"></div>
+  <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;margin-top:4px" onclick="addBullet()">+ Dodaj punkt</button>
+  <div id="savedBulletsSection" style="margin-top:10px"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">Dodatkowe paragrafy <span style="font-size:10px;font-weight:400;color:var(--text3)">(max 3, wstawiane przed §8)</span></div>
+  <div id="extraParsWrap"></div>
+  <button class="btn btn-secondary" style="padding:5px 10px;font-size:12px;margin-top:4px" onclick="addExtraPar()" id="addExtraParBtn">+ Dodaj paragraf</button>
+</div>
+
+<div class="section" id="historySection">
+  <div class="section-title" style="display:flex;justify-content:space-between;align-items:center">
+    <span>Historia umów</span>
+    <button id="btnSaveHistory" style="padding:3px 10px;font-size:11px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:var(--radius);cursor:pointer;font-weight:500">Zapisz bieżącą</button>
+  </div>
+  <div id="historyList" style="margin-top:6px"></div>
+</div>
+
+</div><!-- sidebar-inner -->
+
+<div class="btn-row">
+  <button class="btn btn-primary" onclick="renderContract()">Generuj umowę</button>
+  <button class="btn btn-secondary" onclick="downloadPDF()">PDF</button>
+  <button class="btn btn-secondary" id="btnPelnomocnictwo" style="display:none" onclick="showPelnomocnictwo()">Pełnomocnictwo</button>
+</div>
+</div><!-- sidebar -->
+
+<div class="preview-pane" id="previewPane">
+  <div class="empty-state">
+    <div class="icon">📄</div>
+    <p>Wypełnij formularz i kliknij „Generuj umowę"</p>
+  </div>
+</div>
+
+</div><!-- app -->
+
+<!-- PANEL DOKUMENTÓW -->
+<div id="docsPanel" style="display:none;height:calc(100vh - 53px);display:none;flex-direction:column;background:var(--bg)">
+  <div style="display:flex;height:100%;overflow:hidden">
+
+    <!-- Lewa kolumna: lista + upload -->
+    <div style="width:340px;min-width:340px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Baza dokumentów</div>
+
+        <!-- Upload -->
+        <label id="uploadLabel" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;border:2px dashed var(--border);border-radius:var(--radius);cursor:pointer;font-size:12px;color:var(--text2);transition:all .15s;margin-bottom:8px">
+          <span>📎</span> Dodaj dokument (PDF, obraz, Word)
+          <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp" multiple style="display:none">
+        </label>
+
+        <!-- Kategoria -->
+        <select id="docCategory" style="width:100%;padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;color:var(--text);background:var(--surface);margin-bottom:8px">
+          <option value="Oświadczenie">Oświadczenie</option>
+          <option value="Umowa">Umowa wzorcowa</option>
+          <option value="Bank">Dokumenty bankowe</option>
+          <option value="Inne">Inne</option>
+        </select>
+
+        <!-- Opis -->
+        <input type="text" id="docDesc" placeholder="Opis (opcjonalnie)..." style="width:100%;padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;color:var(--text);background:var(--surface);box-sizing:border-box">
+      </div>
+
+      <!-- Wyszukiwarka -->
+      <div style="padding:10px 20px;border-bottom:1px solid var(--border)">
+        <input type="text" id="docSearch" placeholder="🔍 Szukaj dokumentu..." oninput="filterDocs(this.value)" style="width:100%;padding:6px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;background:var(--surface2);color:var(--text);box-sizing:border-box">
+      </div>
+
+      <!-- Lista dokumentów -->
+      <div id="docList" style="flex:1;overflow-y:auto;padding:10px 12px"></div>
+    </div>
+
+    <!-- Prawa kolumna: podgląd -->
+    <div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div id="docPreviewBar" style="padding:10px 20px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);display:flex;align-items:center;justify-content:space-between;min-height:44px">
+        <span id="docPreviewName">Wybierz dokument z listy aby zobaczyć podgląd</span>
+        <button id="docDownloadBtn" style="display:none;padding:4px 12px;font-size:11px;background:var(--accent-bg);color:var(--accent-text);border:none;border-radius:var(--radius);cursor:pointer">⬇ Pobierz</button>
+      </div>
+      <div id="docPreviewArea" style="flex:1;overflow:auto;background:#f0f0f0;display:flex;align-items:center;justify-content:center">
+        <div style="text-align:center;color:var(--text3);font-size:13px">
+          <div style="font-size:40px;margin-bottom:8px">📂</div>
+          Brak wybranego dokumentu
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const ACCOUNT = "07 1090 1056 0000 0001 6599 3012";
+const TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjY0Njk3ODUxMCwiYWFpIjoxMSwidWlkIjoxMDIzNjA0MjQsImlhZCI6IjIwMjYtMDQtMTdUMTM6MDc6MDEuODQzWiIsInBlciI6Im1lOndyaXRlIiwiYWN0aWQiOjI5NzUzMTkzLCJyZ24iOiJldWMxIn0.CgQMGiNZLoMd-_GBf8hri2sIQJSwHDrjKr1PbJLXoB4";
+const TOKEN_MONDAY = TOKEN;
+const BOARD_ID = "5030473445";
+
+const REMOTE_REPS = [
+  {name:"Tomasz Drewnik", addr:"ul. Głęboka 88/108, Warszawa", id:"DHM 171555", pesel:"96060408531"},
+  {name:"Ewa Dzierzgowska", addr:"ul. Krótka 19, 18-400 Stare Kupiski", id:"CEI929880", pesel:"99030311460"},
+  {name:"Zuzanna Jaszke", addr:"ul. Białej Floty 2 lok. 13, 02-654 Warszawa", id:"CHY 872042", pesel:"01291603303"}
+];
+
+let state = { mode:"remote", ownership:"full", buyers:"1", remoteRepIdx:0, localRep:null };
+let searchTimeout = null;
+
+// Pills
+function initPills(id, key, cb) {
+  document.getElementById(id).addEventListener('click', e => {
+    const p = e.target.closest('.pill');
+    if (!p) return;
+    document.querySelectorAll('#'+id+' .pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+    state[key] = p.dataset.val;
+    cb && cb(p.dataset.val);
+  });
+}
+initPills('modeGroup', 'mode', () => {
+  renderRepSection();
+  const btn = document.getElementById('btnPelnomocnictwo');
+  if (btn) btn.style.display = state.mode === 'local' ? 'inline-flex' : 'none';
+});
+initPills('ownershipGroup', 'ownership', () => { renderPropertyFields(); fillPropFields(); });
+initPills('buyersGroup', 'buyers');
+
+// Pośrednicy — lista statyczna
+const LOCAL_AGENTS = [{"id":"2792348500","name":"Paweł Danys","pesel":"","addr":"ul. Ostródzka 118A m.36, 03-289 Warszawa","dowod":""},{"id":"2768493012","name":"Monika Prasał","pesel":"76071010240","addr":"26-225 Bębnów, Lipowa 2","dowod":"CFW 310175"},{"id":"2768220769","name":"Aleksandra Julia Pocięgiel","pesel":"02280207429","addr":"Karmelicka 67/7","dowod":"DEF 603575"},{"id":"2767880048","name":"Natalia Karolina Synak-Rzeczycka","pesel":"84101503048","addr":"ul. Rumiankowa 5, Kosowo","dowod":"dgt487438"},{"id":"2728989569","name":"Magda Maria Podwojewska","pesel":"80062904546","addr":"ul. Strzegomska 14","dowod":"cdm283107"},{"id":"2650797759","name":"Bartosz Maj","pesel":"88021017092","addr":"Jurajska 7, 25-640 Kielce","dowod":"DBR 537691"},{"id":"2650789959","name":"Julia Paszko","pesel":"04250610325","addr":"Lipiny Dolne 155, 23-423 Potok Górny","dowod":"DBS 914833"},{"id":"2650798184","name":"Monika Ogonowska","pesel":"98112002742","addr":"ul. Niepodległości 57/29, 10-044 Olsztyn","dowod":"CDL148669"},{"id":"2650798193","name":"Ewa Wiśnios","pesel":"96021700089","addr":"ul. Nadmorska 66, 78-132 Grzybowo","dowod":"DIC 930890"},{"id":"2650795429","name":"Daniel Mościński","pesel":"82071400734","addr":"ul. Kostromska 68/19, 97-300 Piotrków Trybunalski","dowod":"DBH 816532"},{"id":"2650796025","name":"Tomasz Duda","pesel":"5270904951","addr":"Olbrachtów 120C, 68-200 Żary","dowod":"CHA116074"},{"id":"2650797902","name":"Maciej Michał Majewski","pesel":"90072811938","addr":"Marcinkowo 179, 11-700 Mrągowo","dowod":"DCE139462"},{"id":"2650795467","name":"Natalia Górecka","pesel":"03240701346","addr":"ul. Długa 34/17, Włocławek","dowod":"CHD 002080"},{"id":"2650790067","name":"Jakub Filip Frącz","pesel":"01240804052","addr":"Pasieka Wałowska 11A, 96-200 Rawa Mazowiecka","dowod":"DAP 387930"},{"id":"2650797760","name":"Marlena Anna Borkowska-Siedlarz","pesel":"95031504267","addr":"Ptaszkowa 870, 33-333 Ptaszkowa","dowod":"CEF 952744"},{"id":"2650797260","name":"Martyna Biczel","pesel":"93061500927","addr":"Reymonta 17C, 59-900 Zgorzelec","dowod":"DCL827810"},{"id":"2650797261","name":"Grzegorz Zaremba","pesel":"87090106270","addr":"Na Skarpie 10, 06-100 Pułtusk","dowod":"DIZ 895583"},{"id":"2650797475","name":"Bartłomiej Tadeusz Laszuk","pesel":"92051102374","addr":"ul. Kościuszki 48/7, 14-500 Braniewo","dowod":"DGP606776"},{"id":"2650795317","name":"Małgorzata Justyna Matuszyk","pesel":"95020900544","addr":"Os. Pod Skarpą 26/8, 34-100 Wadowice","dowod":"DID 862048"},{"id":"2650797262","name":"Klaudia Magdalena Łuczak","pesel":"92061906887","addr":"ul. Zacisze 3, 42-450 Ciągowice","dowod":"Dbk 697349"},{"id":"2650796028","name":"Władysław Zwiranowski","pesel":"00303110914","addr":"ul. Przyszła 5, 96-500 Sochaczew","dowod":"CHX 712080"},{"id":"2650789845","name":"Paweł Sebastian Drzewiecki","pesel":"80053001531","addr":"ul. Modrakowa 76/44, 85-864 Bydgoszcz","dowod":"CCL 744530"},{"id":"2650840421","name":"Marcin Brzostowski","pesel":"98012700395","addr":"Kalinowa 3, 12-200 Pisz","dowod":""},{"id":"2650784291","name":"Aleksandra Chomka","pesel":"00271405265","addr":"Lipowa 38, 08-110 Rakowiec","dowod":"CHC 437429"},{"id":"2650791928","name":"Daria Knappe","pesel":"86062907961","addr":"ul. o. S. Niedbały 7/2, 63-200 Jarocin","dowod":"CHZ 287544"},{"id":"2650840383","name":"Alina Bułhak","pesel":"63112407521","addr":"ul. Za Wiatrakiem 5c/5, 72-006 Mierzyn","dowod":"CGM798242"},{"id":"2650840384","name":"Magdalena Malińska","pesel":"92051703902","addr":"ul. Morenowa 9/89, 10-687 Bartąg","dowod":"DAR966672"},{"id":"2650784059","name":"Natalia Pawłowska","pesel":"01272006967","addr":"Żeromskiego 4/1, 64-200 Wolsztyn","dowod":"CEJ 238107"},{"id":"2650784176","name":"Justyna Wilkosz","pesel":"87113011228","addr":"ul. Barlickiego 10/16, 72-600 Świnoujście","dowod":"DBJ160046"},{"id":"2650784055","name":"Barbara Polanowska","pesel":"71011006549","addr":"ul. Ofiar Katynia 10/58, 35-209 Rzeszów","dowod":"DCW 894824"},{"id":"2650791803","name":"Olga Hryniewicz","pesel":"95050304327","addr":"Szafirowa 3, 62-200 Gniezno","dowod":"DEA 901827"},{"id":"2650840312","name":"Bożena Ostrowska","pesel":"69080100163","addr":"Kromera 2/14, 85-790 Bydgoszcz","dowod":""},{"id":"2650792147","name":"Beata Rydz","pesel":"87071712827","addr":"Tuwima 2, 17-100 Bielsk Podlaski","dowod":"DCJ 457646"},{"id":"2650791796","name":"Aleksandra Gołąb","pesel":"04252608267","addr":"Koszalińska 98D/10, 78-400 Szczecinek","dowod":"DEK 227569"},{"id":"2650840134","name":"Marlena Dróżdż","pesel":"88100313121","addr":"ul. Leśna 5, 05-300 Podrudzie","dowod":"DEV 883863"},{"id":"2650791813","name":"Julia Szpoper","pesel":"97110404808","addr":"Towarowa 13/13, 64-100 Leszno","dowod":"DAE167207"},{"id":"2650791366","name":"Dagmara Patrycja Kowal","pesel":"90022800885","addr":"Powstańców Śląskich 11, 55-110 Prusice","dowod":"DIR 399786"},{"id":"2650791481","name":"Joanna Ziółkowska","pesel":"84050404304","addr":"Orla 49/64, 59-300 Lubin","dowod":"DFA 793553"},{"id":"2650792150","name":"Magda Wójcik","pesel":"98040303289","addr":"Kawaleryjska 8/2, 20-552 Lublin","dowod":"CCD 888304"},{"id":"2650840066","name":"Edyta Zimnicka","pesel":"97120402203","addr":"Pomorska 29/15, 44-335 Jastrzębie Zdrój","dowod":"DGF 380252"},{"id":"2650840609","name":"Zuzanna Monika Cymańska","pesel":"02250504783","addr":"Wybickiego 16D/5, 87-100 Toruń","dowod":"CFB397874"},{"id":"2653208899","name":"Rafał Ostrowski","pesel":"82061406814","addr":"Mostowa 18/2, 59-700 Bolesławiec","dowod":"DJA 065108"},{"id":"2653354582","name":"Damian Jakub Rudyj","pesel":"95082213279","addr":"Buczki 3, 47-143 Buczki","dowod":"DAI 937958"},{"id":"2653460580","name":"Agata Monika Gliniecka","pesel":"84040403425","addr":"Radosna Dolina 1, 83-304 Kosowo","dowod":"DCT 090753"},{"id":"2653500121","name":"Paulina Krystyna Górska","pesel":"94010700863","addr":"Migdałowa 8, 68-111 Stary Żagań","dowod":"DBM765145"},{"id":"2653491272","name":"Łukasz Krzysztof Pluta","pesel":"91081605699","addr":"Książ Wielki 17, 32-210 Moczydło","dowod":"DIP 912024"},{"id":"2650840087","name":"Klaudia Żaneta Mochalska","pesel":"03302810083","addr":"Obozowa 32/34 m. 3, 62-800 Kalisz","dowod":"DCU 729623"},{"id":"2671415926","name":"Natalia Maria Wołczyńska","pesel":"00301505220","addr":"Józefowska 57B, 26-617 Radom","dowod":"DJG763358"},{"id":"2653477984","name":"Weronika Sakowska","pesel":"99041202843","addr":"Szmaragdowa 23/30","dowod":"DKS 290826"},{"id":"2653478335","name":"Monika Katarzyna Malina","pesel":"88042015046","addr":"Trzebunia 710, 32-438 Trzebunia","dowod":"CCF863945"},{"id":"2650792130","name":"Anna Lewandowska","pesel":"86051507444","addr":"ul. Głęboka 4B/16, 98-300 Wieluń","dowod":"DGE512298"},{"id":"2717685177","name":"Magdalena Helena Aftanas","pesel":"85012809087","addr":"Stary Wielisław 135, 57-313","dowod":"DIK874886"},{"id":"2738462411","name":"Maja Zawlik","pesel":"05251900886","addr":"Zawadka 1A, 62-641 Olszówka","dowod":"DBE 447320"},{"id":"2743034129","name":"Monika Maćkowiak","pesel":"92110603424","addr":"Kukadło 2","dowod":"DAN864859"},{"id":"2754180894","name":"Łukasz Rakowski","pesel":"79031800134","addr":"ul. Spacerowa 18, 05-152 Sowia Wola","dowod":"DEA784275"},{"id":"2770674902","name":"Patrycja Agata Iskra","pesel":"94082709126","addr":"57-550 Stronie Śląskie","dowod":"DJH368211"},{"id":"2812492358","name":"Błażej Braciszewski","pesel":"96070900959","addr":"ul. Świętokrzyska 52B, Chodzież","dowod":"CCS350321"},{"id":"2812507297","name":"Karol Tomasz Strycharz","pesel":"04221804593","addr":"ul. Graniczna 8, Mirsk","dowod":"DKN075381"},{"id":"2650797719","name":"Kinga Gielniewska","pesel":"95090204904","addr":"Batalionu Parasol 21/35, Płock","dowod":"DGP 563273"},{"id":"2650790278","name":"Maciej Domagała","pesel":"73100408614","addr":"Grochowa 2 lok. 6, 53-424 Wrocław","dowod":"DEB 060282"},{"id":"2650796290","name":"Marcin Wincek","pesel":"87082500279","addr":"Małachowskiego 1/9, Słupsk","dowod":"DAC 875546"},{"id":"2650802989","name":"Patryk Piotrowski","pesel":"02270105955","addr":"ul. Cegielniana 3/1, 89-500 Tuchola","dowod":"DBR 425341"},{"id":"2650798030","name":"Marcin Kelich","pesel":"77121303918","addr":"ul. Wyspiańskiego 11/8, 64-920 Piła","dowod":"DEU 251650"},{"id":"2650795362","name":"Magdalena Mania","pesel":"80091908049","addr":"ul. Wyszyńskiego 58, 66-400 Gorzów Wlkp.","dowod":"DED 241681"},{"id":"2650796044","name":"Karolina Sarnowska","pesel":"77042206004","addr":"ul. Mieleszyńska 32, 60-008 Poznań","dowod":"DHR 384057"},{"id":"2650789954","name":"Dorota Orwat","pesel":"65102403902","addr":"Szamarzewskiego 103/3, 60-568 Poznań","dowod":"DIZ 587464"},{"id":"2650798017","name":"Filip Ławniczak","pesel":"00322004911","addr":"ul. Spółdzielców 27/7, 62-510 Konin","dowod":"DIY 472882"},{"id":"2650798115","name":"Monika Winiarska","pesel":"84070509841","addr":"ul. Zawadzkiego Zośki 57/13, 65-530 Zielona Góra","dowod":"DBC 931092"},{"id":"2650797847","name":"Martyna Wilk-Kuryłowicz","pesel":"00290601923","addr":"ul. Obrońców Pokoju 20C/4, 67-200 Głogów","dowod":"DID 701138"},{"id":"2650790335","name":"Patrycja Derda","pesel":"87020814662","addr":"ul. 22 Stycznia 8/2, 48-304 Nysa","dowod":""},{"id":"2650790337","name":"Klaudiusz Borowski","pesel":"01260506819","addr":"Kościuszki 12/13, 40-049 Katowice","dowod":"DLA 022194"},{"id":"2650796297","name":"Paulina Berlińska","pesel":"98041708984","addr":"ul. Wiosenna 23H, 41-253 Czeladź","dowod":""},{"id":"2650806571","name":"Agnieszka Florek","pesel":"80033014443","addr":"Grondysa 45A/16, Bielsko-Biała","dowod":"CGY 013752"},{"id":"2650800638","name":"Joanna Mościcka","pesel":"85013109124","addr":"ul. Robotnicza 204/11, 82-300 Elbląg","dowod":"DFL 994618"},{"id":"2650784113","name":"Kornel Jagielski","pesel":"01301605194","addr":"ul. Żołnierska 14D/45, 10-561 Olsztyn","dowod":"CBV 526094"},{"id":"2650799177","name":"Izabela Augustynowicz","pesel":"78110512423","addr":"ul. Konstytucji 3 Maja, 15-776 Białystok","dowod":"DAW 615096"},{"id":"2650798408","name":"Wiesława Macielak","pesel":"66080809184","addr":"ul. Pułtuska 62a/17, 06-400 Ciechanów","dowod":"DKZ 779980"},{"id":"2650840571","name":"Agnieszka Chmiel","pesel":"84091800943","addr":"Kochanowskiego 2, Sandomierz","dowod":"DFW 042604"},{"id":"2650840068","name":"Magdalena Fliśnik","pesel":"98041508126","addr":"ul. Józefa Sowińskiego 3A, 32-020 Wieliczka","dowod":"DAW 362727"},{"id":"2650840187","name":"Jakub Ćwiąkała","pesel":"00321503893","addr":"ul. Lanckorońska 2/3, 30-545 Kraków","dowod":"CCY 632980"},{"id":"2650839932","name":"Justyna Goluch","pesel":"93071811527","addr":"ul. Kopisto 11/192, 35-315 Rzeszów","dowod":"DCL 771319"},{"id":"2650840090","name":"Hubert Konsur","pesel":"98070605414","addr":"Cieszyna nr 152, 38-125","dowod":"CBW 594546"},{"id":"2650799180","name":"Dawid Legejza","pesel":"96121910836","addr":"ul. Wita Stwosza 4A, 37-700 Przemyśl","dowod":"DIT 824800"},{"id":"2650798630","name":"Martyna Ziarkiewicz","pesel":"83092804208","addr":"ul. Pułaskiego 8, 08-530 Dęblin","dowod":"DBD 145731"},{"id":"2650798858","name":"Piotr Baran","pesel":"85021507598","addr":"Zajączkowice 2A, 27-425 Waśniów","dowod":"CBP 833770"},{"id":"2650839859","name":"Marta Rotter","pesel":"92120112545","addr":"Kwiatowa 27, Bystre","dowod":"DBW 702739"},{"id":"2650792129","name":"Paulina Błachnio","pesel":"89092901006","addr":"ul. Stamma 5/35, 84-300 Lębork","dowod":"CFX 913672"},{"id":"2650798477","name":"Emilia Walczak","pesel":"99091608149","addr":"ul. Piaskowa 28/74, 23-200 Kraśnik","dowod":"CFU 509782"},{"id":"new_001","name":"Barbara Maria Wychowaniec","pesel":"83052102364","addr":"42-233 Kolonia Wierzchowisko, ul. Źródlana 15","dowod":"CCS150176"},{"id":"new_002","name":"Klaudia Wichowska","pesel":"04211505585","addr":"78-331 Rąbino, ul. Biernów 10/3","dowod":""},{"id":"new_003","name":"Agnieszka Stec","pesel":"03321404942","addr":"74-500 Chojna, Krajnik Dolny 42/1","dowod":""},{"id":"new_004","name":"Adam Figurski","pesel":"83072410955","addr":"ul. Wąska 4A/3, 87-330 Jabłonowo Pomorskie","dowod":""},{"id":"new_005","name":"Marcin Tworzydło","pesel":"","addr":"ul. Plac Wolności 1/3, 55-050 Sobótka","dowod":""},{"id":"new_006","name":"Dawid Szot","pesel":"91040806394","addr":"ul. Łokietka 1/39, 32-340 Walbrom","dowod":"DAY258132"},{"id":"new_007","name":"Agnieszka Pyrtek","pesel":"86052203226","addr":"Al. Niepodległości 28B/12, 69-100 Słubice","dowod":"DFJ169825"},{"id":"new_008","name":"Kinga Kowszuk","pesel":"97063003389","addr":"ul. Leśna 16, 17-200 Hajnówka","dowod":"DJU146180"},{"id":"new_009","name":"Weronika Gil","pesel":"00323005362","addr":"ul. Bielska 80, 17-200 Hajnówka","dowod":"DHJ568590"}];
+
+let allAgents = LOCAL_AGENTS;
+
+async function fetchAgents() {
+  try {
+    const hint = document.getElementById('propLoadHint');
+    // Pobierz pośredników z Monday - tablica 5030473445
+    let cursor = null;
+    const fetched = [];
+    do {
+      const cursorStr = cursor ? `, cursor: "${cursor}"` : '';
+      const res = await fetch('https://api.monday.com/v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': TOKEN, 'API-Version': '2024-01' },
+        body: JSON.stringify({ query: `{boards(ids:[5030473445]){items_page(limit:500${cursorStr}){cursor items{id name column_values(ids:["text_mkxssedf","text_mm03t580","text_mkxsd32t"]){id text}}}}}` })
+      });
+      const data = await res.json();
+      const page = data?.data?.boards?.[0]?.items_page;
+      if (!page) break;
+      page.items.forEach(item => {
+        if (!item.name || item.name.trim() === '' || item.name === 'Nowy') return;
+        const cv = {};
+        item.column_values.forEach(c => cv[c.id] = c.text || '');
+        fetched.push({
+          id: item.id,
+          name: item.name,
+          addr: cv['text_mkxssedf'] || '',
+          pesel: cv['text_mm03t580'] || '',
+          dowod: cv['text_mkxsd32t'] || ''
+        });
+      });
+      cursor = page.cursor || null;
+    } while (cursor);
+
+    if (fetched.length > 0) {
+      allAgents = fetched;
+      console.log(`Pośrednicy z Monday: ${fetched.length}`);
+    }
+  } catch(e) {
+    console.warn('Błąd pobierania pośredników z Monday, używam lokalnej listy:', e);
+    allAgents = LOCAL_AGENTS;
+  }
+}
+
+function renderRepSection() {
+  const el = document.getElementById('repContent');
+  if (state.mode === 'remote') {
+    el.innerHTML = REMOTE_REPS.map((r,i) => `
+      <div class="rep-card${state.remoteRepIdx===i?' selected':''}" onclick="selectRemoteRep(${i})">
+        <div class="rn">${r.name}</div>
+        <div class="rd">${r.pesel ? 'PESEL: '+r.pesel : 'dane do uzupełnienia'}${r.id ? ' · '+r.id : ''}</div>
+      </div>`).join('');
+  } else {
+    el.innerHTML = `
+      <div class="search-wrap">
+        <input type="text" id="agentSearch" placeholder="Szukaj po imieniu lub nazwisku..." oninput="searchAgent(this.value)" autocomplete="off">
+        <div class="dropdown" id="agentDropdown"></div>
+      </div>
+      <div class="selected-badge" id="selectedBadge"></div>
+      <div class="hint" style="margin-bottom:8px">${allAgents.length} pośredników · <a href="#" onclick="toggleManualRep(event)" style="color:var(--accent);text-decoration:underline;font-size:11px">+ wpisz ręcznie</a></div>
+      <div id="manualRepWrap" style="display:none">
+        <div class="field" style="margin-bottom:6px"><input type="text" id="manName" placeholder="Imię i nazwisko" oninput="updateManualRep()"></div>
+        <div class="field" style="margin-bottom:6px"><input type="text" id="manAddr" placeholder="Adres zamieszkania" oninput="updateManualRep()"></div>
+        <div class="field" style="margin-bottom:6px"><input type="text" id="manId" placeholder="Seria i numer dowodu" oninput="updateManualRep()"></div>
+        <div class="field" style="margin-bottom:0"><input type="text" id="manPesel" placeholder="PESEL" oninput="updateManualRep()"></div>
+      </div>`;
+  }
+}
+
+function toggleManualRep(e) {
+  e.preventDefault();
+  const wrap = document.getElementById('manualRepWrap');
+  if (!wrap) return;
+  const show = wrap.style.display === 'none';
+  wrap.style.display = show ? 'block' : 'none';
+  if (show) document.getElementById('manName').focus();
+  else { state.localRep = null; }
+}
+
+function updateManualRep() {
+  const name = (document.getElementById('manName')?.value||'').trim();
+  const addr = (document.getElementById('manAddr')?.value||'').trim();
+  const id   = (document.getElementById('manId')?.value||'').trim();
+  const pesel= (document.getElementById('manPesel')?.value||'').trim();
+  if (name) state.localRep = { name, addr, id, pesel };
+  else state.localRep = null;
+}
+
+function selectRemoteRep(i) {
+  state.remoteRepIdx = i;
+  state.localRep = null;
+  renderRepSection();
+}
+
+function searchAgent(val) {
+  clearTimeout(searchTimeout);
+  const dd = document.getElementById('agentDropdown');
+  if (!val || val.length < 2) { dd.classList.remove('open'); return; }
+  searchTimeout = setTimeout(() => {
+    const q = val.toLowerCase();
+    const results = allAgents.filter(a => a.name.toLowerCase().includes(q)).slice(0, 8);
+    if (results.length === 0) {
+      dd.innerHTML = '<div class="dd-item"><div class="dn" style="color:#a8a59e">Brak wyników</div></div>';
+      dd.classList.add('open'); return;
+    }
+    dd.innerHTML = results.map(a => `
+      <div class="dd-item" onclick="selectLocalRep('${a.name.replace(/'/g,"\\'")}')">
+        <div class="dn">${a.name}</div>
+        <div class="da">${a.addr||''}</div>
+      </div>`).join('');
+    dd.classList.add('open');
+  }, 200);
+}
+
+function selectLocalRep(name) {
+  const agent = allAgents.find(a => a.name === name);
+  if (!agent) return;
+  // Map dowod → id for contract compatibility
+  state.localRep = { name: agent.name, addr: agent.addr||'', pesel: agent.pesel||'', id: agent.dowod||'' };
+  const dd = document.getElementById('agentDropdown');
+  const inp = document.getElementById('agentSearch');
+  const badge = document.getElementById('selectedBadge');
+  dd.classList.remove('open');
+  if (inp) inp.value = agent.name;
+  if (badge) {
+    badge.style.display = 'block';
+    badge.innerHTML = `<strong>${agent.name}</strong>${agent.addr ? '<br>'+agent.addr : ''}${agent.pesel ? '<br>PESEL: '+agent.pesel : ''}${agent.dowod ? ' · '+agent.dowod : ''}`;
+  }
+}
+
+function renderPropertyFields() {
+  const c = document.getElementById('propertyFields');
+  const o = state.ownership;
+  const kwField = `
+    <div class="field">
+      <label>Numer KW</label>
+      <input type="text" id="pKW" placeholder="np. WA2M/00052718/6" oninput="onKWInput(this.value)">
+      <a class="kw-link" id="kwLink" href="https://przegladarka-ekw.ms.gov.pl/eukw_prz/KsiegiWieczyste/wyszukiwanieKW" target="_blank" rel="noopener">→ Sprawdź w przeglądarce EKW</a>
+    </div>`;
+  if (o === 'full') {
+    c.innerHTML = kwField + `
+      <div class="field"><label>Miejscowość</label><input type="text" id="pCity" placeholder="np. Warszawa"></div>
+      <div class="field"><label>Ulica i numer lokalu</label><input type="text" id="pStreet" placeholder="np. ul. Odyńca 69 lok. 5"></div>
+      <div class="field"><label>Powierzchnia użytkowa (m²)</label><input type="number" id="pArea" placeholder="np. 73.71"></div>`;
+  } else if (o === 'coop') {
+    c.innerHTML = kwField + `
+      <div class="field"><label>Miejscowość</label><input type="text" id="pCity" placeholder=""></div>
+      <div class="field"><label>Ulica i numer lokalu</label><input type="text" id="pStreet" placeholder="np. Ordona 22A/2"></div>
+      <div class="field"><label>Powierzchnia użytkowa (m²)</label><input type="number" id="pArea" placeholder=""></div>`;
+  } else {
+    c.innerHTML = kwField + `
+      <div class="field"><label>Miejscowość</label><input type="text" id="pCity" placeholder=""></div>
+      <div class="field"><label>Ulica i adres</label><input type="text" id="pStreet" placeholder=""></div>
+      <div class="field"><label>Numer działki</label><input type="text" id="pPlot" placeholder="np. 190"></div>
+      <div class="field"><label>Powierzchnia działki (HA)</label><input type="text" id="pAreaHA" placeholder="np. 0.1671"></div>`;
+  }
+}
+
+function onKWInput(val) {
+  const link = document.getElementById('kwLink');
+  if (!link) return;
+  const kw = val.trim();
+  if (kw.length >= 6) {
+    // Show EKW link — user copies KW and checks manually
+    link.classList.add('visible');
+    link.title = 'Skopiuj numer KW: ' + kw + ' i wklej na stronie EKW';
+  } else {
+    link.classList.remove('visible');
+  }
+}
+
+// ---- Properties — static list from Monday export ----
+const PROPERTIES_DATA = [{"name": "Szprotawa, Tadeusza Kościuszki 44/8", "kw": "ZG1G/00026086/2", "id": "0"}, {"name": "Kraśnik, Kolejowa 6C", "kw": "LU1K/00066888/8 i LU1K/00066889/5", "id": "1"}, {"name": "Kcynia, Jesionowa 12", "kw": "BY1U/00038357/7", "id": "2"}, {"name": "Mydłów 2/1", "kw": "KI1T/00027043/2", "id": "3"}, {"name": "Dulsk 28/1", "kw": "TO1G/00016865/4", "id": "4"}, {"name": "Działoszyce, Plac Partyzantów 15/1", "kw": "KI1I/00038034/6", "id": "5"}, {"name": "Działoszyce, Plac Partyzantów 15/3", "kw": "KI1I/00038035/3", "id": "6"}, {"name": "Klecza Dolna, Przy Młynie 31/12", "kw": "KR1W/00100536/7", "id": "7"}, {"name": "Trzebinia, Jana Pawła II 40/22", "kw": "KR1C/00056114/1", "id": "8"}, {"name": "Piaski, Partyzantów 80B", "kw": "LU1I/00284754/2", "id": "9"}, {"name": "Piaseczno, Albatrosów 18B/10", "kw": "WA5M/00423477/7", "id": "10"}, {"name": "Sulechów, Jana Pawła II 43B/52", "kw": "ZG2S/00026618/9", "id": "11"}, {"name": "Krosno 12/4", "kw": "OL1L/00033584/7", "id": "12"}, {"name": "Warszawa, Cokołowa 4/50", "kw": "NIE MOŻNA ZAŁOŻYĆ", "id": "13"}, {"name": "Wolsztyn, Stefana Żeromskiego 13/10", "kw": "PO1E/00047357/1", "id": "14"}, {"name": "Stare Kupiski, Dworna 3/6", "kw": "LM1L/00044545/2", "id": "15"}, {"name": "Łabiszyn, Sienkiewicza 32/4", "kw": "BY1U/00038597/1", "id": "16"}, {"name": "Ostrowiec Świętokrzyski, Jasna 57/33", "kw": "KI1O/00071966/7", "id": "17"}, {"name": "Nadolice Wielkie, Lipowa 13K", "kw": "WR1O/00084113/1", "id": "18"}, {"name": "Prokowo, Kartuska 20", "kw": "GD1R/00009787/6", "id": "19"}, {"name": "Zebrzydowice, Przedwiośnie 28/1", "kw": "BB1C/00087918/9", "id": "20"}, {"name": "Rakoszyn 18B", "kw": "KI1J/00003279/2", "id": "21"}, {"name": "Katowice, Ordona 22A/2", "kw": "KA1K/00077080/6", "id": "22"}, {"name": "Warszawa, Umińskiego 6/124", "kw": "WA6M/00480670/4", "id": "23"}, {"name": "Rzeszów, Strażacka 18E/14", "kw": "RZ1Z/00209542/2", "id": "24"}, {"name": "Płaza, Księdza Józefa Bąby 3", "kw": "KR1C/00041188/2", "id": "25"}, {"name": "Sandomierz, Baczyńskiego 16/31", "kw": "KI1S/00087690/9", "id": "26"}, {"name": "Żencin, Żencin 7", "kw": "PT1R/00109492/6", "id": "27"}, {"name": "Stronie Śląskie, Kościuszki 34/8", "kw": "SW1K/00079698/2", "id": "28"}, {"name": "Sońsk, Nowa 6/1", "kw": "PL1C/00045418/2", "id": "29"}, {"name": "Zakliczyn, Wesołów 118", "kw": "TR1B/00035646/3", "id": "30"}, {"name": "Popowo Kościelne 30B", "kw": "PO1B/00064054/9", "id": "31"}, {"name": "Baranowo, Budowlanych 4/5", "kw": "PO1P/00335535/0", "id": "32"}, {"name": "Bieżuń, Kościelna 10/1", "kw": "PL2M/00024685/8", "id": "33"}, {"name": "Czetowice 35", "kw": "ZG1K/00016708/0", "id": "34"}, {"name": "Chodzież, Wojska Polskiego 16a/8", "kw": "PO1H/00027913/4", "id": "35"}, {"name": "Sobótka, Romana Zmorskiego 19/21/10", "kw": "WR1K/00174775/3", "id": "36"}, {"name": "Chrośla, Mazowiecka 4", "kw": "SI1M/00034577/7", "id": "37"}, {"name": "Gdańsk, Generała Kazimierza Sosnkowskiego 7a/4", "kw": "GD1G/00165531/8", "id": "38"}, {"name": "Straduny, Nadrzeczna 15/11", "kw": "OL1E/00039086/1", "id": "39"}, {"name": "Kutno, Bohaterów Walk Nad Bzurą 12/13", "kw": "LD1K/56048/7", "id": "40"}, {"name": "Jelenia Góra, Osiedle Robotnicze 9/2", "kw": "JG1J/00065415/3", "id": "41"}, {"name": "Białystok, Bohaterów Monte Cassino 13/17", "kw": "BI1B/224135/9", "id": "42"}, {"name": "Warnino, Warnino 1a", "kw": "KO1K/00117254/2", "id": "43"}, {"name": "Kraśnik, Wyszyńskiego 8/58", "kw": "LU1K/00078301/7", "id": "44"}, {"name": "Żyrardów, Izy Zielińskiej 27a/67", "kw": "PL1Z/00052804/7", "id": "45"}, {"name": "Częstochowa, Poleska 74a/19", "kw": "CZ1C/00187744/3", "id": "46"}, {"name": "Jeżówka 43", "kw": "KR1O/00014424/3", "id": "47"}, {"name": "Radzyń Chełmiński, Pl. Towarzystwa Jaszczurczego 20", "kw": "TO1W/00015943/2", "id": "48"}, {"name": "Zawiercie, Astronautów 3", "kw": "CZ1Z/00054165/9", "id": "49"}, {"name": "Malbork, Mickiewicza 69/9", "kw": "GD1M/00023262/0", "id": "50"}, {"name": "Gębarzewo 5/2", "kw": "PO1G/00036511/1", "id": "51"}, {"name": "Słubice, Narutowicza 10/3", "kw": "GW1S/00029345/4", "id": "52"}, {"name": "Końskie, Piłsudskiego 102/3", "kw": "KI1K/00032011/9", "id": "53"}, {"name": "Katowice, Strumienna 3", "kw": "KA1K/00049150/3", "id": "54"}, {"name": "Gdańsk, Granitowa 4 / 22", "kw": "brak", "id": "55"}, {"name": "Łomianki Dolne, Wspólna 59a", "kw": "WA4M/00391190/0", "id": "56"}, {"name": "Gąbin, Nowy Rynek 6", "kw": "PL1G/00043156/7", "id": "57"}, {"name": "Galów 137", "kw": "KI1B/00085182/5", "id": "58"}, {"name": "Wschowa, Bema 6/1", "kw": "ZG1W/00028463/7", "id": "59"}, {"name": "Jabłonowo Pomorskie, Nowy Rynek 7/40", "kw": "TO1B/00053446/7", "id": "60"}, {"name": "Marklowice Górne, Piaskowa 7", "kw": "BB1C/00013399/5", "id": "61"}, {"name": "Skarszów Górny, Kasztanowa 6b 6b", "kw": "SL1S/00047626/4", "id": "62"}, {"name": "Miejsce Piastowe, Dukielska 17 / 17", "kw": "KS1K/00097987/1 KS1K/00121259/7", "id": "63"}, {"name": "Bydgoszcz, Okólna 5/12", "kw": "BY1B/00150128/6", "id": "64"}, {"name": "Zabrze, Wolności 123a/55", "kw": "", "id": "65"}, {"name": "Świebodzin, Zachodnia 30/9", "kw": "ZG1S/00048360/8", "id": "66"}, {"name": "Wasilków, Emilii Plater 4/28", "kw": "BI1B/00270704/6", "id": "67"}, {"name": "Ławki, Zielonych Sosen 4", "kw": "WA5M/00420683/3", "id": "68"}, {"name": "Poznań, Wichrowe Wzgórze 29/26", "kw": "PO1P/00361940/3", "id": "69"}, {"name": "Kętrzyn, Władysława Reymonta 9C", "kw": "OL1K/00011843/0", "id": "70"}, {"name": "Bielicha, Pawia 3", "kw": "RA1R/00042575/1", "id": "71"}, {"name": "Leszno, Wierzbowa 31A", "kw": "PO1L/00019795/5", "id": "72"}];
+
+let properties = PROPERTIES_DATA;
+
+async function loadProperties() {
+  const hint = document.getElementById('propLoadHint');
+  if (hint) hint.textContent = 'Pobieranie nieruchomości z Monday...';
+  try {
+    // Pobierz nieruchomości z Monday - tablica 💰 Sprzedaż 5030474510
+    // Name = adres, lookup_mkya4a90 = Księga wieczysta (mirror)
+    let cursor = null;
+    const fetched = [];
+    do {
+      const cursorStr = cursor ? `, cursor: "${cursor}"` : '';
+      const res = await fetch('https://api.monday.com/v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': TOKEN, 'API-Version': '2024-01' },
+        body: JSON.stringify({ query: `{boards(ids:[5030474510]){items_page(limit:500${cursorStr}){cursor items{id name column_values(ids:["lookup_mkya4a90"]){id text}}}}}` })
+      });
+      const data = await res.json();
+      const page = data?.data?.boards?.[0]?.items_page;
+      if (!page) break;
+      page.items.forEach(item => {
+        if (!item.name || item.name.trim() === '') return;
+        const kw = item.column_values?.[0]?.text || '';
+        fetched.push({ id: item.id, name: item.name.trim(), kw });
+      });
+      cursor = page.cursor || null;
+    } while (cursor);
+
+    if (fetched.length > 0) {
+      // Połącz z lokalną listą (bez duplikatów)
+      const mondayNames = new Set(fetched.map(p => p.name.toLowerCase()));
+      const localOnly = PROPERTIES_DATA.filter(p => !mondayNames.has(p.name.toLowerCase()));
+      properties = [...fetched, ...localOnly];
+      if (hint) hint.textContent = `${properties.length} nieruchomości (${fetched.length} z Monday)`;
+    } else {
+      // Fallback na lokalne dane + window.storage
+      const raw = await storageGet('kmbno_extra_props');
+      const extra = raw ? JSON.parse(raw) : [];
+      properties = [...PROPERTIES_DATA, ...extra];
+      if (hint) hint.textContent = properties.length + ' nieruchomości w bazie';
+    }
+  } catch(e) {
+    console.warn('Błąd pobierania nieruchomości z Monday:', e);
+    try {
+      const raw = await storageGet('kmbno_extra_props');
+      const extra = raw ? JSON.parse(raw) : [];
+      properties = [...PROPERTIES_DATA, ...extra];
+    } catch { properties = [...PROPERTIES_DATA]; }
+    if (hint) hint.textContent = properties.length + ' nieruchomości w bazie (offline)';
+  }
+}
+
+function importPropertiesExcel(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const label = document.getElementById('importExcelBtn');
+  const span = label.childNodes[0];
+  span.textContent = '⏳ Wczytywanie...';
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Znajdź wiersz nagłówka (pierwszych 10 wierszy)
+      let headerRow = -1, addrCol = -1, kwCol = -1;
+      for (let r = 0; r < Math.min(10, rows.length); r++) {
+        for (let c = 0; c < rows[r].length; c++) {
+          const cell = String(rows[r][c] || '').trim().toLowerCase();
+          if (cell === 'name' || cell === 'adres') { headerRow = r; addrCol = c; }
+          if (cell === 'kw') { kwCol = c; }
+        }
+        if (headerRow === r) break;
+      }
+
+      if (addrCol === -1) {
+        alert('Nie znaleziono kolumny "Name" lub "Adres".\nSprawdź nagłówki pliku.');
+        span.textContent = '⬆ Dodaj z Excel'; input.value = ''; return;
+      }
+
+      // Wczytaj istniejące
+      const rawExisting = await storageGet('kmbno_extra_props');
+      const existing = rawExisting ? JSON.parse(rawExisting) : [];
+      const knownNames = new Set([
+        ...PROPERTIES_DATA.map(p => p.name.trim().toLowerCase()),
+        ...existing.map(p => p.name.trim().toLowerCase())
+      ]);
+
+      // Dodaj nowe
+      const newProps = [];
+      for (let r = headerRow + 1; r < rows.length; r++) {
+        const name = String(rows[r][addrCol] || '').trim();
+        if (!name) continue;
+        if (knownNames.has(name.toLowerCase())) continue;
+        const kw = kwCol > -1 ? String(rows[r][kwCol] || '').trim() : '';
+        newProps.push({ name, kw, id: 'imp_' + r + '_' + Date.now() });
+        knownNames.add(name.toLowerCase());
+      }
+
+      if (!newProps.length) {
+        alert('Brak nowych nieruchomości — wszystkie już są w bazie.');
+        span.textContent = '⬆ Dodaj z Excel'; input.value = ''; return;
+      }
+
+      await storageSave('kmbno_extra_props', JSON.stringify([...existing, ...newProps]));
+      await loadProperties();
+      span.textContent = '✓ +' + newProps.length + ' dodano';
+      setTimeout(() => { span.textContent = '⬆ Dodaj z Excel'; }, 3000);
+
+    } catch(err) {
+      console.error(err);
+      alert('Błąd: ' + err.message);
+      span.textContent = '⬆ Dodaj z Excel';
+    }
+    input.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function searchProp(val) {
+  clearTimeout(searchTimeout);
+  const dd = document.getElementById('propDropdown');
+  if (!dd) return;
+  if (!val || val.length < 2) { dd.classList.remove('open'); return; }
+  searchTimeout = setTimeout(() => {
+    const q = val.toLowerCase();
+    const results = properties.filter(p => p.name.toLowerCase().includes(q)).slice(0, 10);
+    if (!results.length) {
+      dd.innerHTML = '<div class="dd-item"><div class="dn" style="color:var(--text3)">Brak wyników</div></div>';
+      dd.classList.add('open'); return;
+    }
+    dd.innerHTML = results.map(p => `
+      <div class="dd-item" onclick="selectProp('${p.id}')">
+        <div class="dn">${p.name}</div>
+        <div class="da">${p.kw ? 'KW: ' + p.kw : 'brak KW'} ${p.status ? '· ' + p.status : ''}</div>
+      </div>`).join('');
+    dd.classList.add('open');
+  }, 200);
+}
+
+function selectProp(id) {
+  const p = properties.find(x => x.id === id);
+  if (!p) return;
+
+  const dd = document.getElementById('propDropdown');
+  if (dd) dd.classList.remove('open');
+  const inp = document.getElementById('propSearch');
+  if (inp) inp.value = p.name;
+
+  const badge = document.getElementById('propBadge');
+  if (badge) {
+    const kwVal = p.kw && p.kw !== 'brak' && p.kw !== 'NIE MOŻNA ZAŁOŻYĆ' ? p.kw : '';
+    // Próba wykrycia formy własności z KW lub adresu
+    // Brak KW → prawdopodobnie spółdzielcze
+    // KW istnieje → pełna własność lub grunt (sprawdź po adresie)
+    let ownershipGuess = '';
+    if (!kwVal) ownershipGuess = '⚠️ brak KW — sprawdź formę własności';
+    badge.style.display = 'block';
+    badge.innerHTML = `<strong>${p.name}</strong>${kwVal ? ' · KW: ' + kwVal : ' · brak KW'}${ownershipGuess ? '<br><span style="font-size:10px;color:var(--warn-text)">' + ownershipGuess + '</span>' : ''}`;
+  }
+
+  // Zapisz wybraną nieruchomość do state (żeby przetrwała zmianę formy własności)
+  state.selectedProp = p;
+
+  // Parse city and street from name
+  let city = '', street = '';
+  const commaIdx = p.name.indexOf(',');
+  if (commaIdx > -1) {
+    city = p.name.substring(0, commaIdx).trim();
+    street = p.name.substring(commaIdx + 1).trim();
+  } else {
+    street = p.name.trim();
+  }
+  state.selectedCity = city;
+  state.selectedStreet = street;
+
+  renderPropertyFields();
+  fillPropFields();
+}
+
+function fillPropFields() {
+  const p = state.selectedProp;
+  if (!p) return;
+  setTimeout(() => {
+    const sv = (id, v) => { const el = document.getElementById(id); if (el !== null && v !== undefined && v !== '') el.value = v; };
+    const kwClean = p.kw && p.kw !== 'brak' && p.kw !== 'NIE MOŻNA ZAŁOŻYĆ' ? p.kw : '';
+    sv('pKW', kwClean);
+    sv('pCity', state.selectedCity || '');
+    sv('pStreet', state.selectedStreet || '');
+    if (kwClean) onKWInput(kwClean);
+  }, 50);
+}
+
+document.addEventListener('click', e => {
+  const dd = document.getElementById('propDropdown');
+  if (dd && !dd.contains(e.target) && e.target.id !== 'propSearch') dd.classList.remove('open');
+  const dd2 = document.getElementById('agentDropdown');
+  if (dd2 && !dd2.contains(e.target) && e.target.id !== 'agentSearch') dd2.classList.remove('open');
+});
+
+const PODPIS_B64 = '/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABUALQDASIAAhEBAxEB/8QAHAABAAIDAQEBAAAAAAAAAAAAAAQGAQUHAwII/8QAOhAAAQMDAgQEBAMECwAAAAAAAQACAwQFEQYSBxMhMRRBUWEicYGRFUJSIyQysQgXM0NEU2JzkpPB/8QAGAEBAQEBAQAAAAAAAAAAAAAAAAECBAP/xAArEQEAAgEDAgQEBwAAAAAAAAAAAQIRAxIhMUEEUcHwMnGx0RMiYYGhsvH/2gAMAwEAAhEDEQA/AP2WiLX195t9Ddbfa6mcMq7i97KaPHV5Ywvd9gCrEZ6DYIsZ6ZUS13W33Rs7rfVR1DYJnQSlhyGyN/ib8xlQTEREBERAREQEREBEJA7rAcD2QZREQEREBERAREQEREBc+1zLGzi9w/Y9wBe+vDM56nwx/wDM910Fci441X4dr/QNzdLy46WvO74AekkkEJOc5ADZXE+2V1eErFtTE+Vv6yzacQ6NrG7xWLS1xu8pwKWndIPd2Og++FSv6P8AbZ7NYLlb6j+18aaiYEHImlaHyD6OOPotnxAd+MXuxaRjJcKmcVlaAe1PCQ4g+znbW/VeXCrL7trQuBwNQShpye3LjWKxjSmDuvw7Ig7IvBoREQEREBEXjWbvCy7Th2w4P0TuOe3p9brR92MdXUUembWZIXNp5nRSXKeMfG3mN6thacsO3Bc4OGQG4dprDTQaWbpLU2n4ZqK2X7kU9yt4qXSRNfMzLJGh5OHNd0JHcd1ddLW82vhbQ2+bEksNpaJ3AY5khjy9x93OLifcqnU10t50bw+tE1bBBUSPpqoMkcBiGFuXZ9OmAF1U/NmI6R9kmXXUUajuFDWAmkq4KgDvypA7H2Ulcs8Kh1typaOuo6OcyiSse5kJEbi3cGl2HOAw3oDjPdTFGuVL4ukfCH8t5GWPAyWOHUOHyOCpAz5q8DKIhIAJJwAoCLzhmimBMUjX477TnC9EBERAXOuLFlo77qXTFruG7w1e6spHOYcOaXUz3gg+RHLyPcBdFVM4hgs1Foqr6hsF7IcQOg5lLPGM/V4H2XtofH+0/SUt0TtJaTjslTPcaq41V1utSxsc1ZUYBLG9mNaOjR59O5VKsF2r7dovVlxomxC41GoaiOkDuoMjixjennjBOPZdZ/KuF2WSVmo7RaqhwETdX1zpQD0L2xh0ef8AkVrSnfE594SXQNGT3u13+ssGoLobi50MdVSVL2hhcD0ezA9HA49iFNfr7SjL8bKbrF4sScp2AdjZP0F/YO9srn/Eq3XDXd1rK6wVzqRulI5XU9Qwkc+sDQ7bkd2t2hp8urla+HdBboeDtsdJTR1cctvbV1G5gJnkc3e959XF2TlbvSmItPWe0dkjLN44mUVBVVz4rLc621W4uFdc4WDkQljiJB1OXbcHOO2D6K6VrpjRyGlIE2wmMkZGcdFROGtqtMnAmzU10EclBcLO2qrzI7DXmoZzZiT6F0jj9VD4b6srLzrTVlRVmWK0+Gp6i0tecB9O3mtdKB5bnDPy2nzWbadbZmkfD/KxPm6Jb6iQ2+mkrAIp3saHtPT48dQPqvfnxc7k8xnMxu2bhux649FxniVeJ7rdqKqpK6SK1WFtNcKgsdgSSSOy0OPmAzLsL60lT1VXxasmr6yWYTXujrjHA5xAipmcrlN29s4JJPuk+HxTfMm7l2hYcA4YPZZUG/XOGz2ua5VId4eAb5i0Z2MB+J3yAyfouaOWld4n3essmnY4rZa6qsfVv8Kami3clm0kuI8gAP5Kn8GuGOnBo6hu2oLdS3q41sDXudWM57YmflYwPyAPXGOq6ldZm/g1TLEzngwOc1rDneNvktRwwc12grSWsc1ogwGuGCBk9MeS6Y1rV0NteOef16s45y1d84e2WCmfXaXgg07dYGF8E9CwQxlwHQSMbhr2+uRn0IUzRWr4bxarB4qN8VfdLf4vlgZDA3aHZPlku6euD6Ly1xefGTO0faY3VNxrY9tSW/wUsDujnvcOxIyAO+VGstPT0XEi4MbyoqW22OkgZlwG0b5nFx9Bjb9is7ZmmbfP6fdpZ6e9wT6orrA2KQTUdHT1b5DjaWzPma1o9xyHE/ML6t94pq653G3wtk5tA5jJiRgbnN3AD16EfdaHh4H3GovWqXOzHdasCjyP8LC0RxkeznCSQe0i19tqXUV14hVbA9zo5onNDepz4VmMKRpxMzHlj0TlMtev7ZVXW+Q1H7pQ2loeayR2I5QCQ8j2Dhj7rcXm90wt1J4R7JpLnhlJ03NfubncR+kDqVzBlgFVWx2GrDeRbLIyprs/30r2vdgj/cy5S7FfbVb7vpma9XCnpaKjsZ5E078NdM520zR/qDWjoui2hTOac/5wZWvS1DLa9dVVK4RN51qhmmEDNkTphI9rnBvkSNv2V1VR0VVvv18uOpWU8kNFJEykonSAtdNGwucZMHsC5xx7AK3Lm1s7ueqiIi8gVf15bzXWPewyiWiqYa2MRN3Oc6GRsm0Dzztx9VYEVrM1nMD4hdviY7BbkZwe4VMu/DSw3W43Csq5q8eNmZPthqHR8mVoxvYW9WkjufNXZFa2mvQayyWK22azR2i207YKRjS0MHXOe5J8yfMr0sloorPY6Wy0UZbR0sLYImOOcMAwBk9+inopmZHNqThdIKWnsdfqavq9L0bv3a07WsbywctikeBufG0dA0nsADlbTWOhZLxc6Sttl3ktGyldQ1TYowRLTOLTsH6SC0YPl1V1Rb/FvnORXb/o2yXmwyWWen5VHK5jpGwnaXhmMAkdxgY+S9ajTNJJqS0XqOR8LrZTTU0ULANhZIGfy2Bb1FN9sYyYF8TxRzROilY17Hgtc1wyCD3C+0WBzl1DqvR14AsVH+OaamJL6Iy4qaQ46CIuIaWZ/Ke3kVJbU65vv7C3WtmlqIn456xzZqjB77GNJY0+5J+SvuEXtOvM8zWM+fvhMNPpfTtDYKN8VMZJp5nb6ipmdulnf+pzvNanVGgbVqG9tudVVV0O+FkFXBBMWR1cbHOc1kgHcAud884KtyLEXtE7onlXnBDHTwthhY2ONjQ1jWjAaB2ACqOly3+sPV9E4NILaKcgjvvY9vX/AK1cj2VL09lnF3VbSSQ+2W17Rjt8dUD/ACCtOlvl6wLTPbqWbxBdEwPqY+XK9ow5zcEYz9SoVp0zZrbZ6a1Q0UUlNTD9kJmiQj3y7Jz7rcIsbpxjIwxjWNDWgNaBgADoFlEUBERARE88oCJ7ogIsFD26IMosDoVlAREQEREBYPZZQoMOGQQtVpq6i5U87JAGVdJO6Cpjxja8eYB64Iw4eoIK2xVQ1RbrrbLwNTadp2VUzmCOvoSdviWAjD2n/MaMgfqHTyC3SsWnb3FvPZU2x5fxb1K7adrbVbm7vInmVRI+fb7+6iv1/X1bhTWbQ+o6iqccDxVIaWJo9XSSYH0HXottoGyV9tpa2vvMsb7tc6jxFUInExxYaGsiYT3a1rQM+ZJPmvSaTp1nd39+iZysyIi8FEREBERAREQEREBERAREQEREBERAREQEREBA9EREBERAREQEREH/2Q==';
+
+function buildPelnomocnictwoHtml() {
+  const rep = getRep();
+  if (!rep || !rep.name) return null;
+
+  const city  = g('pCity')  || '';
+  const street = g('pStreet') || '';
+  const area  = g('pArea')  || '';
+  const kw    = g('pKW')    || '';
+  const o     = state.ownership;
+  const price = g('price');
+  const priceFormatted = fmtNumber(price);
+
+  const dateVal = g('contractDate');
+  let dateStr = '';
+  if (dateVal) { const [y,m,d] = dateVal.split('-'); dateStr = `${d}.${m}.${y} r.`; }
+  else { const n = new Date(); dateStr = `${String(n.getDate()).padStart(2,'0')}.${String(n.getMonth()+1).padStart(2,'0')}.${n.getFullYear()} r.`; }
+
+  const cityLoc = cityLocative(city) || city;
+  let nierDesc = '';
+  if (o === 'coop') {
+    const si = street.lastIndexOf('/');
+    const unit = si > -1 ? street.substring(si+1).trim() : '';
+    const snu  = si > -1 ? street.substring(0,si).trim() : street;
+    nierDesc = `spółdzielczego własnościowego prawa do lokalu mieszkalnego o numerze ${unit||'___'} położonego w ${cityLoc} przy ul. ${snu||'___'} o powierzchni użytkowej lokalu ${area||'___'} m², dla którego jest prowadzona księga wieczysta numer ${kw||'___'}`;
+  } else if (o === 'land') {
+    nierDesc = `nieruchomości gruntowej o numerze działki ${g('pPlot')||'___'} położonej w ${cityLoc} przy ulicy ${street||'___'}, o powierzchni działki ${g('pAreaHA')||'___'} HA, dla której prowadzona jest księga wieczysta numer ${kw||'___'}`;
+  } else {
+    nierDesc = `lokalu stanowiącego odrębną nieruchomość położonego w ${cityLoc} przy ${street||'___'}, o powierzchni użytkowej ${area||'___'} m², dla którego prowadzona jest księga wieczysta numer ${kw||'___'}`;
+  }
+
+  const repDat = personDative(rep.name);
+
+  return { repDat, dateStr, nierDesc, priceFormatted, rep };
+}
+
+function showPelnomocnictwo() {
+  if (state.mode !== 'local') { alert('Pełnomocnictwo dostępne tylko dla trybu Na miejscu.'); return; }
+  const d = buildPelnomocnictwoHtml();
+  if (!d) { alert('Najpierw wybierz pełnomocnika.'); return; }
+
+  const { repDat, dateStr, nierDesc, priceFormatted, rep } = d;
+
+  const content = `<div id="pelnomocnictwoContent" style="font-family:'Times New Roman',Times,serif;font-size:11pt;line-height:1.7;color:#000;max-width:21cm;margin:0 auto;padding:1cm 0">
+    <div style="text-align:right;margin-bottom:2em">${dateStr}, Warszawa</div>
+    <div style="text-align:center;font-weight:bold;font-size:13pt;margin-bottom:1.5em;text-transform:uppercase;letter-spacing:.05em">Pełnomocnictwo</div>
+    <p style="text-align:justify;margin-bottom:.8em">Ja niżej podpisany Marcin Bujno zamieszkały ul. Bluszczańska 4/18, 00-712 Warszawa, legitymujący się dowodem osobistym seria i numer: CGH 796397, PESEL: 93083000151, działając jako Wiceprezes Zarządu spółki <strong>KMBNO</strong> Sp. z o. o. z siedzibą przy ul. Twarda 18, 00-105 Warszawa, NIP: 5252862330, REGON: 388950413, KRS: 0000899554, uprawniony do samodzielnej reprezentacji, niniejszym udzielam pełnomocnictwa:</p>
+    <p style="text-align:justify;margin-bottom:.8em"><strong>${repDat}</strong>${rep.addr ? ' zam. ' + rep.addr : ''}${rep.pesel ? ', PESEL: ' + rep.pesel : ''}${rep.id ? ', seria i numer dowodu: ' + rep.id : ''}</p>
+    <p style="text-align:justify;margin-bottom:.8em">do zawarcia w imieniu spółki <strong>KMBNO</strong> Sp. z o. o. z siedzibą przy ul. Twarda 18, 00-105 Warszawa, NIP: 5252862330, REGON: 388950413, KRS: 0000899554 przedwstępnej umowy sprzedaży dot. zbycia przez wskazaną powyżej spółkę ${nierDesc} za cenę nie mniejszą niż <strong>${priceFormatted || '___'} zł</strong> płatną na rachunek bankowy spółki: <strong>${ACCOUNT}</strong>, a na pozostałych warunkach wg. uznania pełnomocnika.</p>
+    <div style="margin-top:4em;text-align:center">
+      <img style="max-width:180px;display:block;margin:0 auto .3em" src="data:image/jpeg;base64,${PODPIS_B64}" alt="podpis">
+      <div style="font-size:10.5pt;line-height:1.5">Wiceprezes Zarządu<br><strong>Marcin Bujno</strong></div>
+    </div>
+  </div>`;
+
+  document.getElementById('previewPane').innerHTML = `
+    <div class="contract-actions">
+      <button class="btn btn-secondary" style="flex:0;padding:8px 16px" id="btnBackToContract" onclick="renderContract()">← Wróć do umowy</button>
+      <button class="btn btn-secondary" style="flex:0;padding:8px 16px" id="btnEditPelnomocnictwo" onclick="toggleEditPelnomocnictwo()">✏️ Edytuj</button>
+      <button class="btn btn-primary" style="flex:0;padding:8px 16px" onclick="downloadPelnomocnictwoPDF()">PDF</button>
+    </div>
+    <div class="contract-wrap">${content}</div>`;
+}
+
+function toggleEditPelnomocnictwo() {
+  const content = document.getElementById('pelnomocnictwoContent');
+  const btn = document.getElementById('btnEditPelnomocnictwo');
+  if (!content || !btn) return;
+  const editing = content.contentEditable === 'true';
+  if (editing) {
+    content.contentEditable = 'false';
+    content.style.outline = '';
+    btn.textContent = '✏️ Edytuj';
+    btn.style.background = '';
+    btn.style.color = '';
+  } else {
+    content.contentEditable = 'true';
+    content.style.outline = '2px solid var(--accent)';
+    content.style.outlineOffset = '4px';
+    content.focus();
+    btn.textContent = '✅ Zakończ edycję';
+    btn.style.background = 'var(--green-bg)';
+    btn.style.color = 'var(--green)';
+  }
+}
+
+function downloadPelnomocnictwoPDF() {
+  const el = document.getElementById('pelnomocnictwoContent');
+  if (!el) return;
+  const rep = getRep();
+  const repName = (rep?.name || 'pelnomocnik').replace(/\s+/g,'_');
+
+  const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="UTF-8">
+  <title>Pełnomocnictwo — ${rep?.name||''}</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:"Times New Roman",Times,serif;font-size:11pt;line-height:1.7;color:#000}
+    .strona{max-width:21cm;margin:0 auto;padding:2cm 2cm}
+    p{text-align:justify;margin-bottom:.8em;line-height:1.7}
+    .druk-btn{text-align:center;margin-bottom:1cm;display:flex;gap:10px;justify-content:center}
+    button{padding:9px 22px;font-size:13px;background:#1a1916;color:#fff;border:none;border-radius:6px;cursor:pointer}
+    @media print{.druk-btn{display:none!important}}
+  </style></head><body>
+  <div class="strona">
+    <div class="druk-btn"><button onclick="window.print()">Zapisz jako PDF / Drukuj</button></div>
+    ${el.innerHTML}
+  </div></body></html>`;
+
+  const blob = new Blob([html], { type:'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `Pelnomocnictwo_${repName}.html`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// stara funkcja — zachowana dla kompatybilności
+function downloadPelnomocnictwo() { showPelnomocnictwo(); }
+
+// Celownik (komu udzielam pełnomocnictwa)
+function personDative(fullName) {
+  if (!fullName) return fullName;
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return fullName;
+  const first = imieDative(parts[0]);
+  const last = parts.slice(1).map(nazwiskoDative).join(' ');
+  return first + ' ' + last;
+}
+function imieDative(n) {
+  if (!n) return n;
+  // Żeńskie na -nna → -nnie (Anna→Annie, Joanna→Joannie, Zuzanna→Zuzannie)
+  if (/nna$/i.test(n)) return n.replace(/nna$/, 'nnie');
+  // Żeńskie na -ia → -ii (Julia→Julii, Maria→Marii)
+  if (/ia$/i.test(n)) return n.replace(/ia$/, 'ii');
+  // Żeńskie na -ea → -ei (Dorotea→Dorotei) — rzadkie
+  if (/ea$/i.test(n)) return n.replace(/ea$/, 'ei');
+  // Żeńskie na -wa → -wie (Ewa→Ewie, Genowefa→Genowefie... ale -wa najczęściej)
+  if (/wa$/i.test(n)) return n.replace(/wa$/, 'wie');
+  // Żeńskie na -ka → -ce (Monika→Monice, Weronika→Weronice, Aldona→nie)
+  if (/[ei]ka$/i.test(n)) return n.replace(/ka$/, 'ce');
+  // Żeńskie na -a → -ie (Monika→Monice już wyżej, Natalia→Natalii już wyżej)
+  // Dagmara→Dagmarze, Klaudia→Klaudii, Agata→Agacie... ogólna zasada
+  if (/ta$/i.test(n)) return n.replace(/ta$/, 'cie');
+  if (/da$/i.test(n)) return n.replace(/da$/, 'dzie');
+  if (/ra$/i.test(n)) return n.replace(/ra$/, 'rze');
+  if (/la$/i.test(n)) return n.replace(/la$/, 'li');
+  if (/na$/i.test(n)) return n.replace(/na$/, 'nie');
+  if (/a$/i.test(n)) return n.replace(/a$/, 'ie');
+  // Männlich na -sz → -szowi (Tomasz→Tomaszowi, Łukasz→Łukaszowi)
+  if (/sz$/i.test(n)) return n + 'owi';
+  // Männlich na -el, -er, -ek → nieodmienne lub +owi
+  if (/el$/i.test(n)) return n + 'owi'; // Daniel→Danielowi
+  // Ogólnie männlich spółgłoska → +owi
+  if (/[bcdfghjklmnprstwzłńź]$/i.test(n)) return n + 'owi';
+  return n;
+}
+function nazwiskoDative(n) {
+  if (!n) return n;
+  // Sprawdź wyjątki nieodmienne
+  const lower = n.trim().toLowerCase();
+  for (const w of NIEODMIENNE_NAZWISKA) {
+    if (lower === w || lower.endsWith('-' + w)) return n;
+  }
+  if (/wska$/i.test(n)) return n.replace(/wska$/, 'wskiej');
+  if (/ska$/i.test(n)) return n.replace(/ska$/, 'skiej');
+  if (/cka$/i.test(n)) return n.replace(/cka$/, 'ckiej');
+  if (/dzka$/i.test(n)) return n.replace(/dzka$/, 'dzkiej');
+  // Nieodmienne: -ek, -el, -er, -en, -ke
+  if (/ek$/i.test(n)) return n;
+  if (/el$/i.test(n)) return n;
+  if (/er$/i.test(n)) return n;
+  if (/en$/i.test(n)) return n;
+  if (/ke$/i.test(n)) return n;
+  if (/[bcdfghjklmnprstwzłńź]$/i.test(n)) return n + 'owi';
+  return n;
+}
+
+function addBullet(text) {
+  const wrap = document.getElementById('extraBulletsWrap');
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:6px;align-items:flex-start;margin-bottom:6px';
+
+  const textarea = document.createElement('textarea');
+  textarea.rows = 2;
+  textarea.placeholder = 'Treść punktu...';
+  textarea.style.cssText = 'flex:1;resize:vertical;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;line-height:1.4';
+  if (text) textarea.value = text;
+
+  const btnWrap = document.createElement('div');
+  btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:4px;padding-top:2px';
+
+  const removeBtn = document.createElement('button');
+  removeBtn.title = 'Usuń';
+  removeBtn.style.cssText = 'padding:3px 7px;background:var(--red-bg);color:var(--red);border:1px solid #f5c6c6;border-radius:var(--radius);cursor:pointer;font-size:11px';
+  removeBtn.textContent = '✕';
+  removeBtn.addEventListener('click', () => div.remove());
+
+  const saveBtn = document.createElement('button');
+  saveBtn.title = 'Zapisz';
+  saveBtn.style.cssText = 'padding:3px 7px;background:var(--surface2);color:var(--text2);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;font-size:11px';
+  saveBtn.textContent = '💾';
+  saveBtn.addEventListener('click', () => saveSingleBullet(saveBtn, textarea));
+
+  btnWrap.appendChild(removeBtn);
+  btnWrap.appendChild(saveBtn);
+  div.appendChild(textarea);
+  div.appendChild(btnWrap);
+  wrap.appendChild(div);
+  if (!text) textarea.focus();
+}
+
+async function saveSingleBullet(btn, textarea) {
+  const text = textarea.value.trim();
+  if (!text) { alert('Wpisz treść punktu przed zapisaniem.'); return; }
+  const saved = await getSavedBullets();
+  if (saved.includes(text)) { alert('Ten punkt jest już zapisany.'); return; }
+  saved.push(text);
+  await storageSave('kmbno_bullets', JSON.stringify(saved));
+  btn.textContent = '✓';
+  btn.style.background = 'var(--green-bg)';
+  btn.style.color = 'var(--green)';
+  setTimeout(() => { btn.textContent = '💾'; btn.style.background = 'var(--surface2)'; btn.style.color = 'var(--text2)'; }, 1500);
+  renderSavedBullets();
+}
+
+function getExtraBullets() {
+  const wrap = document.getElementById('extraBulletsWrap');
+  if (!wrap) return [];
+  return Array.from(wrap.querySelectorAll('textarea'))
+    .map(t => t.value.trim()).filter(v => v.length > 0);
+}
+
+async function getSavedBullets() {
+  try { const r = await storageGet('kmbno_bullets'); return r ? JSON.parse(r) : []; }
+  catch { return []; }
+}
+
+async function renderSavedBullets() {
+  const saved = await getSavedBullets();
+  const section = document.getElementById('savedBulletsSection');
+  if (!section) return;
+  if (!saved.length) { section.innerHTML = ''; return; }
+  section.innerHTML = '';
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:11px;font-weight:600;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em';
+  title.textContent = 'Zapisane punkty';
+  section.appendChild(title);
+  saved.forEach((b, i) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:5px;align-items:flex-start;margin-bottom:5px';
+    const txt = document.createElement('div');
+    txt.style.cssText = 'flex:1;font-size:11px;line-height:1.45;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2)';
+    txt.textContent = b;
+    const bw = document.createElement('div');
+    bw.style.cssText = 'display:flex;flex-direction:column;gap:3px';
+    const addBtn = document.createElement('button');
+    addBtn.title = 'Dodaj do umowy';
+    addBtn.style.cssText = 'padding:3px 7px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:var(--radius);cursor:pointer;font-size:11px';
+    addBtn.textContent = '+';
+    addBtn.addEventListener('click', () => { addBullet(b); renderSavedBullets(); });
+    const delBtn = document.createElement('button');
+    delBtn.title = 'Usuń z listy';
+    delBtn.style.cssText = 'padding:3px 7px;background:var(--red-bg);color:var(--red);border:1px solid #f5c6c6;border-radius:var(--radius);cursor:pointer;font-size:11px';
+    delBtn.textContent = '✕';
+    delBtn.addEventListener('click', () => deleteSavedBullet(i));
+    bw.appendChild(addBtn); bw.appendChild(delBtn);
+    row.appendChild(txt); row.appendChild(bw);
+    section.appendChild(row);
+  });
+}
+
+async function deleteSavedBullet(i) {
+  const saved = await getSavedBullets();
+  saved.splice(i, 1);
+  await storageSave('kmbno_bullets', JSON.stringify(saved));
+  renderSavedBullets();
+}
+function addExtraPar() {
+  const wrap = document.getElementById('extraParsWrap');
+  if (!wrap) return;
+  if (wrap.children.length >= 3) { alert('Możesz dodać maksymalnie 3 dodatkowe paragrafy.'); return; }
+  const num = wrap.children.length + 1;
+  const div = document.createElement('div');
+  div.style.cssText = 'margin-bottom:8px;border:1px solid var(--border);border-radius:var(--radius);padding:8px;background:var(--surface2)';
+
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px';
+
+  const label = document.createElement('span');
+  label.style.cssText = 'font-size:11px;font-weight:600;color:var(--text2)';
+  label.textContent = 'Paragraf dodatkowy ' + num;
+
+  const removeBtn = document.createElement('button');
+  removeBtn.style.cssText = 'padding:2px 7px;background:var(--red-bg);color:var(--red);border:1px solid #f5c6c6;border-radius:var(--radius);cursor:pointer;font-size:11px';
+  removeBtn.textContent = '✕';
+  removeBtn.addEventListener('click', () => { div.remove(); updateAddParBtn(); });
+
+  const textarea = document.createElement('textarea');
+  textarea.rows = 3;
+  textarea.placeholder = 'Treść paragrafu...';
+  textarea.style.cssText = 'width:100%;resize:vertical;font-size:12px;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;line-height:1.4;box-sizing:border-box';
+
+  header.appendChild(label);
+  header.appendChild(removeBtn);
+  div.appendChild(header);
+  div.appendChild(textarea);
+  wrap.appendChild(div);
+  textarea.focus();
+  updateAddParBtn();
+}
+
+// ---- Historia umów ----
+function getFormSnapshot() {
+  const fields = ['contractDate','price','deposit','deadline','condition','conditionCustom','pKW','pCity','pStreet','pArea','pPlot','pAreaHA','pUnit','pExtraDesc'];
+  const snap = {
+    ts: Date.now(),
+    mode: state.mode,
+    ownership: state.ownership,
+    buyers: state.buyers,
+    remoteRepIdx: state.remoteRepIdx,
+    localRep: state.localRep,
+    selectedProp: state.selectedProp,
+    selectedCity: state.selectedCity,
+    selectedStreet: state.selectedStreet,
+    hasExtraDesc: document.getElementById('hasExtraDesc')?.checked || false,
+    extraBullets: getExtraBullets(),
+    extraPars: getExtraPars(),
+    agentSearch: document.getElementById('agentSearch')?.value || '',
+    propSearch: document.getElementById('propSearch')?.value || '',
+  };
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) snap[id] = el.value;
+  });
+  return snap;
+}
+
+async function saveToHistory() {
+  const snap = getFormSnapshot();
+  const prop = snap.selectedProp?.name || snap.pCity || 'Umowa';
+  const date = new Date(snap.ts);
+  const label = `${prop} — ${String(date.getDate()).padStart(2,'0')}.${String(date.getMonth()+1).padStart(2,'0')}.${date.getFullYear()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+  snap.label = label;
+  try {
+    const raw = await storageGet('kmbno_history');
+    const history = raw ? JSON.parse(raw) : [];
+    history.unshift(snap);
+    if (history.length > 30) history.pop();
+    await storageSave('kmbno_history', JSON.stringify(history));
+    renderHistory();
+    const btn = document.querySelector('#historySection button');
+    if (btn) { const orig = btn.textContent; btn.textContent = '✓ Zapisano'; setTimeout(() => btn.textContent = orig, 1500); }
+  } catch(e) { console.error('saveToHistory:', e); }
+}
+
+async function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!list) return;
+  try {
+    const raw = await storageGet('kmbno_history');
+    const history = raw ? JSON.parse(raw) : [];
+    if (!history.length) {
+      list.innerHTML = '<div style="font-size:11px;color:var(--text3)">Brak zapisanych umów.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    history.forEach((snap, i) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;gap:5px;align-items:center;margin-bottom:5px;padding:5px 7px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius)';
+      const label = document.createElement('div');
+      label.style.cssText = 'flex:1;font-size:11px;color:var(--text2);line-height:1.3;cursor:pointer';
+      label.textContent = snap.label || 'Umowa ' + (i+1);
+      label.addEventListener('click', () => loadFromHistory(i));
+      const loadBtn = document.createElement('button');
+      loadBtn.style.cssText = 'padding:2px 7px;font-size:11px;background:var(--accent-bg);color:var(--accent-text);border:none;border-radius:var(--radius);cursor:pointer';
+      loadBtn.textContent = 'Wczytaj';
+      loadBtn.addEventListener('click', () => {
+        loadFromHistory(i);
+        loadBtn.textContent = '✓';
+        setTimeout(() => loadBtn.textContent = 'Wczytaj', 1500);
+      });
+      const delBtn = document.createElement('button');
+      delBtn.style.cssText = 'padding:2px 7px;font-size:11px;background:var(--red-bg);color:var(--red);border:1px solid #f5c6c6;border-radius:var(--radius);cursor:pointer';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', () => deleteFromHistory(i));
+      row.appendChild(label); row.appendChild(loadBtn); row.appendChild(delBtn);
+      list.appendChild(row);
+    });
+  } catch(e) { console.error('renderHistory:', e); }
+}
+
+async function loadFromHistory(i) {
+  try {
+    const raw = await storageGet('kmbno_history');
+    const history = raw ? JSON.parse(raw) : [];
+    const snap = history[i];
+    if (!snap) return;
+
+    // 1. Przywróć state
+    state.mode = snap.mode || 'remote';
+    state.ownership = snap.ownership || 'full';
+    state.buyers = snap.buyers || '1';
+    state.remoteRepIdx = snap.remoteRepIdx || 0;
+    state.localRep = snap.localRep || null;
+    state.selectedProp = snap.selectedProp || null;
+    state.selectedCity = snap.selectedCity || '';
+    state.selectedStreet = snap.selectedStreet || '';
+
+    // 2. Zaktualizuj pills
+    ['modeGroup','ownershipGroup','buyersGroup'].forEach(gid => {
+      const key = gid === 'modeGroup' ? 'mode' : gid === 'ownershipGroup' ? 'ownership' : 'buyers';
+      document.querySelectorAll('#' + gid + ' .pill').forEach(p => p.classList.toggle('active', p.dataset.val === state[key]));
+    });
+
+    // 3. Odśwież sekcje zależne od state
+    renderRepSection();
+    renderPropertyFields();
+
+    // 4. Wypełnij pola po wyrenderowaniu DOM (200ms daje czas)
+    setTimeout(() => {
+      const sv = (id, v) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = (v !== undefined && v !== null) ? v : '';
+      };
+
+      // Pola formularza
+      sv('contractDate', snap.contractDate);
+      sv('price', snap.price);
+      sv('deposit', snap.deposit);
+      sv('deadline', snap.deadline);
+      sv('condition', snap.condition);
+      sv('conditionCustom', snap.conditionCustom);
+      sv('pKW', snap.pKW);
+      sv('pCity', snap.pCity);
+      sv('pStreet', snap.pStreet);
+      sv('pArea', snap.pArea);
+      sv('pPlot', snap.pPlot);
+      sv('pAreaHA', snap.pAreaHA);
+      sv('pExtraDesc', snap.pExtraDesc);
+
+      // Wyzwalacze zmiany
+      toggleCustom();
+      updateDeposit();
+      if (snap.pKW) onKWInput(snap.pKW);
+
+      // Checkbox "dodatkowy opis"
+      const cb = document.getElementById('hasExtraDesc');
+      const wrap = document.getElementById('extraDescWrap');
+      if (cb) cb.checked = !!snap.hasExtraDesc;
+      if (wrap) wrap.style.display = snap.hasExtraDesc ? 'block' : 'none';
+
+      // Badge nieruchomości
+      const propInp = document.getElementById('propSearch');
+      if (propInp && snap.propSearch) propInp.value = snap.propSearch;
+      if (snap.selectedProp) {
+        const badge = document.getElementById('propBadge');
+        if (badge) {
+          const p = snap.selectedProp;
+          const kwVal = p.kw && p.kw !== 'brak' && p.kw !== 'NIE MOŻNA ZAŁOŻYĆ' ? p.kw : '';
+          badge.style.display = 'block';
+          badge.innerHTML = '<strong>' + p.name + '</strong>' + (kwVal ? ' · KW: ' + kwVal : ' · brak KW');
+        }
+      }
+
+      // Pełnomocnik na miejscu
+      if (state.mode === 'local' && snap.localRep) {
+        const agentInp = document.getElementById('agentSearch');
+        if (agentInp) agentInp.value = snap.localRep.name || '';
+        const badge2 = document.getElementById('selectedBadge');
+        if (badge2) {
+          badge2.style.display = 'block';
+          badge2.innerHTML = '<strong>' + (snap.localRep.name||'') + '</strong>'
+            + (snap.localRep.addr ? '<br>' + snap.localRep.addr : '')
+            + (snap.localRep.pesel ? '<br>PESEL: ' + snap.localRep.pesel : '')
+            + (snap.localRep.id ? ' · ' + snap.localRep.id : '');
+        }
+      }
+
+      // Przycisk pełnomocnictwa
+      const btnP = document.getElementById('btnPelnomocnictwo');
+      if (btnP) btnP.style.display = state.mode === 'local' ? 'inline-flex' : 'none';
+
+      // Dodatkowe punkty §1
+      const bulletsWrap = document.getElementById('extraBulletsWrap');
+      if (bulletsWrap) {
+        bulletsWrap.innerHTML = '';
+        if (snap.extraBullets && snap.extraBullets.length) {
+          snap.extraBullets.forEach(b => addBullet(b));
+        }
+      }
+
+      // Dodatkowe paragrafy
+      const parsWrap = document.getElementById('extraParsWrap');
+      if (parsWrap) {
+        parsWrap.innerHTML = '';
+        if (snap.extraPars && snap.extraPars.length) {
+          snap.extraPars.forEach(txt => addExtraPar());
+          setTimeout(() => {
+            parsWrap.querySelectorAll('textarea').forEach((ta, idx) => {
+              if (snap.extraPars[idx]) ta.value = snap.extraPars[idx];
+            });
+            updateAddParBtn();
+          }, 50);
+        }
+      }
+
+      // Wygeneruj podgląd umowy automatycznie po wczytaniu
+      setTimeout(() => renderContract(), 300);
+
+    }, 200);
+
+  } catch(e) { console.error('loadFromHistory error:', e); }
+}
+
+async function deleteFromHistory(i) {
+  try {
+    const raw = await storageGet('kmbno_history');
+    const history = raw ? JSON.parse(raw) : [];
+    history.splice(i, 1);
+    await storageSave('kmbno_history', JSON.stringify(history));
+    renderHistory();
+  } catch(e) {}
+}
+
+function toggleCustom() {
+  document.getElementById('conditionCustomWrap').style.display = document.getElementById('condition').value === 'custom' ? 'block' : 'none';
+}
+
+function toggleExtraDesc() {
+  const cb = document.getElementById('hasExtraDesc');
+  const wrap = document.getElementById('extraDescWrap');
+  if (wrap) wrap.style.display = cb.checked ? 'block' : 'none';
+  if (!cb.checked) { const t = document.getElementById('pExtraDesc'); if(t) t.value=''; }
+}
+
+function updateAddParBtn() {
+  const wrap = document.getElementById('extraParsWrap');
+  const btn = document.getElementById('addExtraParBtn');
+  if (btn && wrap) btn.style.display = wrap.children.length >= 3 ? 'none' : 'inline-flex';
+}
+
+function getExtraPars() {
+  const wrap = document.getElementById('extraParsWrap');
+  if (!wrap) return [];
+  return Array.from(wrap.querySelectorAll('textarea'))
+    .map(t => t.value.trim()).filter(v => v.length > 0);
+}
+
+function updateDeposit() {
+  const p = parseFloat(document.getElementById('price').value)||0;
+  const d = parseFloat(document.getElementById('deposit').value)||0;
+  document.getElementById('depositPct').textContent = (p&&d) ? `≈ ${(d/p*100).toFixed(1)}% ceny` : '';
+}
+
+function g(id) { return ((document.getElementById(id)||{}).value||'').trim(); }
+
+function fmtNumber(n) {
+  if (!n) return '';
+  const num = parseInt((n+'').trim());
+  if (isNaN(num)) return '';
+  return num.toLocaleString('pl-PL').replace(/\s/g, '.');
+}
+
+function blank(val, ph) {
+  const v = (val||'').trim();
+  // If filled: show value inline, no border
+  // If empty: show just an underline with no placeholder text
+  return v
+    ? `<span class="blank f">${v}</span>`
+    : `<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>`;
+}
+
+function fmtDate(d) {
+  if (!d) return null;
+  const [y,m,day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
+
+function numberToWords(n) {
+  const u=['','jeden','dwa','trzy','cztery','pięć','sześć','siedem','osiem','dziewięć','dziesięć','jedenaście','dwanaście','trzynaście','czternaście','piętnaście','szesnaście','siedemnaście','osiemnaście','dziewiętnaście'];
+  const t=['','','dwadzieścia','trzydzieści','czterdzieści','pięćdziesiąt','sześćdziesiąt','siedemdziesiąt','osiemdziesiąt','dziewięćdziesiąt'];
+  const h=['','sto','dwieście','trzysta','czterysta','pięćset','sześćset','siedemset','osiemset','dziewięćset'];
+  if (!n||isNaN(n)) return '';
+  n = parseInt(n); if (n===0) return 'zero';
+  let r='';
+  if (n>=1000000){const m=Math.floor(n/1000000);r+=numberToWords(m)+' '+(m===1?'milion':m<5?'miliony':'milionów')+' ';n%=1000000;}
+  if (n>=1000){const th=Math.floor(n/1000);r+=(th===1?'tysiąc':th<5?numberToWords(th)+' tysiące':numberToWords(th)+' tysięcy')+' ';n%=1000;}
+  if (n>=100){r+=h[Math.floor(n/100)]+' ';n%=100;}
+  if (n>=20){r+=t[Math.floor(n/10)]+' ';n%=10;}
+  if (n>0) r+=u[n]+' ';
+  return r.trim();
+}
+
+function getConditionText() {
+  const v = g('condition');
+  if (v==='custom') return g('conditionCustom') ? 'w stanie: ' + g('conditionCustom') : '';
+  if (v==='remont') return 'w stanie do remontu';
+  if (v==='odswiezenie') return 'w stanie do odświeżenia';
+  if (v==='generalny') return 'w stanie do generalnego remontu';
+  return '';
+}
+
+function getRep() {
+  if (state.mode==='remote') return REMOTE_REPS[state.remoteRepIdx];
+  return state.localRep || {name:'',addr:'',id:'',pesel:''};
+}
+
+// ---- Polish declension — BIERNIK (przez kogo?) ----
+
+// Imię w bierniku: Ewa→Ewę, Zuzanna→Zuzannę, Tomasz→Tomasza
+function imieAccusative(name) {
+  if (!name) return name;
+  const n = name.trim();
+  // Męskie zakończone spółgłoską → +a (Tomasz→Tomasza, Jakub→Jakuba)
+  if (/sz$/.test(n)) return n + 'a';
+  if (/[bcdfghjklmnprstwzłńź]$/i.test(n)) return n + 'a';
+  // Żeńskie na -nna → -nnę (Zuzanna→Zuzannę, Anna→Annę)
+  if (/nna$/i.test(n)) return n.replace(/a$/, 'ę');
+  // Żeńskie na -a → -ę (Ewa→Ewę, Monika→Monikę, Julia→Julię)
+  if (/a$/i.test(n)) return n.replace(/a$/, 'ę');
+  return n;
+}
+
+// Nazwisko w bierniku: Drewnik→Drewnika, Dzierzgowska→Dzierzgowską, Jaszke→Jaszke
+function nazwiskoAccusative(name) {
+  if (!name) return name;
+  const n = name.trim();
+  // Żeńskie przymiotnikowe złożone (Synak-Rzeczycka)
+  if (/-\w+cka$/i.test(n)) return n.replace(/cka$/, 'cką');
+  if (/-\w+ska$/i.test(n)) return n.replace(/ska$/, 'ską');
+  // Żeńskie przymiotnikowe -ska/-cka/-dzka → -ską/-cką/-dzką
+  if (/wska$/i.test(n)) return n.replace(/wska$/, 'wską');
+  if (/ska$/i.test(n)) return n.replace(/ska$/, 'ską');
+  if (/cka$/i.test(n)) return n.replace(/cka$/, 'cką');
+  if (/dzka$/i.test(n)) return n.replace(/dzka$/, 'dzką');
+  // Nazwiska obcego pochodzenia / nieodmienne:
+  // -ek, -el, -er, -en, -em, -ew, -ej, -eg → nieodmienne
+  if (/ek$/i.test(n)) return n;   // Wincek, Nowak-Wincek
+  if (/el$/i.test(n)) return n;   // Daniel, Mendel
+  if (/er$/i.test(n)) return n;   // Bauer, Müller
+  if (/en$/i.test(n)) return n;   // Hansen, Beren
+  if (/em$/i.test(n)) return n;   // Stem
+  // Nazwiska na -e nieodmienne (Jaszke, Schulze)
+  if (/[aeiouąęó]ke$/i.test(n)) return n;
+  if (/ke$/i.test(n)) return n;
+  // Żeńskie na -a (imię jest kobietą a nazwisko jest nieodmienne)
+  // Sprawdzamy: czy to wygląda jak polskie imię żeńskie → zostaw bez zmian
+  // Polskie nazwiska żeńskie kończące się na -a, -ia → bez zmiany (bo to forma żeńska mianownika)
+  // Polskie nazwiska męskie na spółgłoskę → +a
+  if (/[bcdfghjklmnprstwzłńź]$/i.test(n)) {
+    // Sprawdź: czy poprzednia litera to 'e' + k/l/r/n → może być nieodmienne
+    // np. Nowak → Nowaka ✓, Kowal → Kowala ✓, Wróbel → Wróbla ✓
+    // ale Jaszek → Jaszka (polskie), Wincek → nieodmienne
+    return n + 'a';
+  }
+  return n;
+}
+
+// Słownik wyjątków nieodmiennych nazwisk — uzupełniaj gdy pojawi się błąd
+const NIEODMIENNE_NAZWISKA = new Set([
+  'wincek','jaszke','schulze','braun','klein','stein','mann',
+  'weber','krause','schulz','neumann','zimmermann','hoffmann',
+  'schäfer','richter','becker','maier','lehmann','köhler',
+]);
+
+function nazwiskoAccusativeWithExceptions(name) {
+  if (!name) return name;
+  const lower = name.trim().toLowerCase();
+  // Sprawdź słownik wyjątków
+  for (const w of NIEODMIENNE_NAZWISKA) {
+    if (lower === w || lower.endsWith('-' + w)) return name;
+  }
+  return nazwiskoAccusative(name);
+}
+
+function personAccusative(fullName) {
+  if (!fullName) return fullName;
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return fullName;
+  const firstName = imieAccusative(parts[0]);
+  const lastName = parts.slice(1).map(nazwiskoAccusativeWithExceptions).join(' ');
+  return firstName + ' ' + lastName;
+}
+
+// Miejscowość w miejscowniku (Katowice → Katowicach, Warszawa → Warszawie, Kraków → Krakowie)
+function cityLocative(city) {
+  if (!city) return city;
+  const c = city.trim();
+
+  // --- Słownik wyjątków (nieregularne) ---
+  const exceptions = {
+    'warszawa': 'Warszawie', 'kraków': 'Krakowie', 'gdańsk': 'Gdańsku',
+    'wrocław': 'Wrocławiu', 'łódź': 'Łodzi', 'poznań': 'Poznaniu',
+    'szczecin': 'Szczecinie', 'bydgoszcz': 'Bydgoszczy', 'lublin': 'Lublinie',
+    'katowice': 'Katowicach', 'białystok': 'Białymstoku', 'gdynia': 'Gdyni',
+    'częstochowa': 'Częstochowie', 'radom': 'Radomiu', 'sosnowiec': 'Sosnowcu',
+    'toruń': 'Toruniu', 'kielce': 'Kielcach', 'rzeszów': 'Rzeszowie',
+    'gliwice': 'Gliwicach', 'zabrze': 'Zabrzu', 'olsztyn': 'Olsztynie',
+    'bielsko-biała': 'Bielsku-Białej', 'bytom': 'Bytomiu', 'zielona góra': 'Zielonej Górze',
+    'rybnik': 'Rybniku', 'ruda śląska': 'Rudzie Śląskiej', 'opole': 'Opolu',
+    'tychy': 'Tychach', 'gorzów wielkopolski': 'Gorzowie Wielkopolskim',
+    'dąbrowa górnicza': 'Dąbrowie Górniczej', 'elbląg': 'Elblągu',
+    'płock': 'Płocku', 'wałbrzych': 'Wałbrzychu', 'włocławek': 'Włocławku',
+    'tarnów': 'Tarnowie', 'chorzów': 'Chorzowie', 'kalisz': 'Kaliszu',
+    'koszalin': 'Koszalinie', 'legnica': 'Legnicy', 'grudziądz': 'Grudziądzu',
+    'jaworzno': 'Jaworznie', 'słupsk': 'Słupsku', 'jastrzębie-zdrój': 'Jastrzębiu-Zdroju',
+    'nowy sącz': 'Nowym Sączu', 'jelenia góra': 'Jeleniej Górze',
+    'siedlce': 'Siedlcach', 'mysłowice': 'Mysłowicach', 'konin': 'Koninie',
+    'piotrków trybunalski': 'Piotrkowie Trybunalskim', 'inowrocław': 'Inowrocławiu',
+    'lubin': 'Lubinie', 'ostrów wielkopolski': 'Ostrowie Wielkopolskim',
+    'suwałki': 'Suwałkach', 'gniezno': 'Gnieźnie', 'stargard': 'Stargardzie',
+    'głogów': 'Głogowie', 'przemyśl': 'Przemyślu', 'zamość': 'Zamościu',
+    'chełm': 'Chełmie', 'piła': 'Pile', 'pabianice': 'Pabianicach',
+    'świdnica': 'Świdnicy', 'łomża': 'Łomży', 'żory': 'Żorach',
+    'mielec': 'Mielcu', 'ostrołęka': 'Ostrołęce', 'tarnobrzeg': 'Tarnobrzegu',
+    'kędzierzyn-koźle': 'Kędzierzynie-Koźlu', 'nowa sól': 'Nowej Soli',
+    'leszno': 'Lesznie', 'skierniewice': 'Skierniewicach', 'starachowice': 'Starachowicach',
+    'sieradz': 'Sieradzu', 'siemianowice śląskie': 'Siemianowicach Śląskich',
+    'żyrardów': 'Żyrardowie', 'oświęcim': 'Oświęcimiu', 'piaseczno': 'Piasecznie',
+    'choszczno': 'Choszcznie', 'chodzież': 'Chodzieży', 'śrem': 'Śremie',
+    'środa wielkopolska': 'Środzie Wielkopolskiej', 'wolsztyn': 'Wolsztynie',
+    'krotoszyn': 'Krotoszynie', 'jarocin': 'Jarocinie', 'ostrów mazowiecka': 'Ostrowi Mazowieckiej',
+    'ostrowiec świętokrzyski': 'Ostrowcu Świętokrzyskim', 'starogard gdański': 'Starogardzie Gdańskim',
+    'malbork': 'Malborku', 'tczew': 'Tczewie', 'kwidzyn': 'Kwidzynie',
+    'chełmno': 'Chełmnie', 'nakło nad notecią': 'Nakle nad Notecią',
+    'żnin': 'Żninie', 'mogilno': 'Mogilnie', 'szubin': 'Szubinie',
+    'brześć kujawski': 'Brześciu Kujawskim', 'radziejów': 'Radziejowie',
+    'aleksandrów kujawski': 'Aleksandrowie Kujawskim', 'lipno': 'Lipnie',
+    'rypin': 'Rypinie', 'brodnica': 'Brodnicy', 'wąbrzeźno': 'Wąbrzeźnie',
+    'golub-dobrzyń': 'Golubiu-Dobrzyniu', 'chełmża': 'Chełmży',
+  };
+
+  const key = c.toLowerCase();
+  if (exceptions[key]) return exceptions[key];
+
+  // --- Reguły ogólne ---
+
+  // Liczba mnoga na -ice → -icach (Gliwice, Katowice, Kielce...)
+  if (/ice$/i.test(c)) return c.replace(/ice$/, 'icach');
+  // -ace → -acach (Działoszyce → Działoszycach)
+  if (/ace$/i.test(c)) return c.replace(/ace$/, 'acach');
+  // -yce → -ycach (Tychy → Tychach już w wyjątkach, Stryszyce → Strzyszycach)
+  if (/yce$/i.test(c)) return c.replace(/yce$/, 'ycach');
+  // -ce → -cach
+  if (/[^i]ce$/i.test(c)) return c.replace(/ce$/, 'cach');
+  // -ki → -kach (Ławki, Kcynia nie, ale Piaski → Piaskach)
+  if (/ski$/i.test(c)) return c.replace(/ski$/, 'skim'); // przymiotnikowe
+  if (/ki$/i.test(c)) return c.replace(/ki$/, 'kach');
+  // -dy → -dach
+  if (/dy$/i.test(c)) return c.replace(/dy$/, 'dach');
+  // -ły → -łach
+  if (/ły$/i.test(c)) return c.replace(/ły$/, 'łach');
+  // -ny → -nach
+  if (/ny$/i.test(c)) return c.replace(/ny$/, 'nach');
+  // -wy → -wach
+  if (/wy$/i.test(c)) return c.replace(/wy$/, 'wach');
+  // -ry → -rach
+  if (/ry$/i.test(c)) return c.replace(/ry$/, 'rach');
+  // -ty → -tach
+  if (/ty$/i.test(c)) return c.replace(/ty$/, 'tach');
+
+  // -wa → -wie (Warszawa, Częstochowa — już w wyjątkach, ale ogólna reguła)
+  if (/owa$/i.test(c)) return c.replace(/owa$/, 'owie');
+  if (/ewa$/i.test(c)) return c.replace(/ewa$/, 'ewie');
+  if (/wa$/i.test(c)) return c.replace(/wa$/, 'wie');
+
+  // -ów → -owie (Kraków, Rzeszów — w wyjątkach)
+  if (/ów$/i.test(c)) return c.replace(/ów$/, 'owie');
+
+  // -ań → -aniu (Poznań → Poznaniu)
+  if (/ań$/i.test(c)) return c.replace(/ań$/, 'aniu');
+  if (/eń$/i.test(c)) return c.replace(/eń$/, 'eniu');
+  if (/oń$/i.test(c)) return c.replace(/oń$/, 'oniu');
+  if (/uń$/i.test(c)) return c.replace(/uń$/, 'uniu');
+
+  // -nia → -ni (Środa nie, ale Kostrzyna → Kostrzynie)
+  if (/nia$/i.test(c)) return c.replace(/nia$/, 'ni');
+
+  // -ia → -i (Gdynia → Gdyni, Sofia → Sofii)
+  if (/ia$/i.test(c)) return c.replace(/ia$/, 'i');
+
+  // -a → zależy od poprzedniej spółgłoski
+  if (/a$/i.test(c)) {
+    const stem = c.slice(0, -1);
+    const last = stem.slice(-1).toLowerCase();
+    if ('szżźćńłrg'.includes(last)) return stem + 'ie';
+    if (last === 'k') return stem + 'ce'; // rzadkie w miastach
+    if (last === 'c') return stem + 'y';
+    return stem + 'ie';
+  }
+
+  // Spółgłoska na końcu → +u lub +ie
+  if (/in$/i.test(c)) return c.replace(/in$/, 'inie');
+  if (/yn$/i.test(c)) return c.replace(/yn$/, 'ynie');
+  if (/ańsk$/i.test(c)) return c.replace(/ańsk$/, 'ańsku');
+  if (/ńsk$/i.test(c)) return c.replace(/ńsk$/, 'ńsku');
+  if (/sk$/i.test(c)) return c.replace(/sk$/, 'sku');
+  if (/ck$/i.test(c)) return c.replace(/ck$/, 'cku');
+  if (/ek$/i.test(c)) return c.replace(/ek$/, 'ku'); // Otwock → Otwocku
+  if (/ok$/i.test(c)) return c.replace(/ok$/, 'oku');
+  if (/uk$/i.test(c)) return c.replace(/uk$/, 'uku');
+  if (/ik$/i.test(c)) return c.replace(/ik$/, 'iku');
+
+  // -ewo → -ewiu, -owo → -owiu (Zalasewo → Zalasewiu, Krzyszkowo → Krzyszkowiu)
+  if (/ewo$/i.test(c)) return c.replace(/ewo$/, 'ewiu');
+  if (/owo$/i.test(c)) return c.replace(/owo$/, 'owiu');
+  // -no → -nie (Choszczno → Choszcznie)
+  if (/no$/i.test(c)) return c.replace(/no$/, 'nie');
+  // -ko → -ku
+  if (/ko$/i.test(c)) return c.replace(/ko$/, 'ku');
+  // -go → -gu
+  if (/go$/i.test(c)) return c.replace(/go$/, 'gu');
+  // -o → +u (ogólne)
+  if (/o$/i.test(c)) return c.replace(/o$/, 'u');
+
+  return c + 'u';
+}
+
+function streetLocative(street) {
+  if (!street) return street;
+  const m = street.match(/^(.*?)\s+\d/);
+  const name = m ? m[1].trim() : street.trim();
+  const rest = street.slice(name.length);
+  const words = name.split(/\s+/);
+
+  // Rzeczowniki-typy ulic z odmianą: Mur→Muru, Plac→Placu itd.
+  const streetNouns = {'mur':'Muru','plac':'Placu','rynek':'Rynku','bulwar':'Bulwaru',
+    'trakt':'Traktu','skwer':'Skweru','zaułek':'Zaułku','osiedle':'Osiedlu',
+    'aleja':'Alei','aleje':'Alei','szosa':'Szosy'};
+  const firstLow = words[0].toLowerCase();
+  if (streetNouns[firstLow] && words.length > 1) {
+    const restWords = words.slice(1);
+    const last2 = restWords[restWords.length-1];
+    restWords[restWords.length-1] = declineStreetWord(last2);
+    return streetNouns[firstLow] + ' ' + restWords.join(' ') + rest;
+  }
+
+  // Nieodmienne: dopełniacz imion/nazwisk (-ego, -iego, -skiego, -i po spółgłosce)
+  const last = words[words.length-1];
+  const isGenitive = /ego$|iego$/i.test(last) || /[^aeiouąęó]i$/i.test(last);
+  if (isGenitive) return name + rest;
+
+  // Odmieniamy ostatni wyraz
+  words[words.length-1] = declineStreetWord(last);
+  return words.join(' ') + rest;
+}
+
+function declineStreetWord(w) {
+  if (!w) return w;
+  // Żeński przymiotnik
+  if (/waldzka$/i.test(w)) return w.replace(/waldzka$/,'waldzkiej');
+  if (/dzka$/i.test(w)) return w.replace(/dzka$/,'dzkiej');
+  if (/wska$/i.test(w)) return w.replace(/wska$/,'wskiej');
+  if (/ńska$/i.test(w)) return w.replace(/ńska$/,'ńskiej');
+  if (/ska$/i.test(w)) return w.replace(/ska$/,'skiej');
+  if (/cka$/i.test(w)) return w.replace(/cka$/,'ckiej');
+  if (/owa$/i.test(w)) return w.replace(/owa$/,'owej');
+  if (/ewa$/i.test(w)) return w.replace(/ewa$/,'ewej');
+  if (/awa$/i.test(w)) return w.replace(/awa$/,'awej');
+  if (/czna$/i.test(w)) return w.replace(/czna$/,'cznej');
+  if (/tna$/i.test(w)) return w.replace(/tna$/,'tnej');
+  if (/dna$/i.test(w)) return w.replace(/dna$/,'dnej');
+  if (/żna$/i.test(w)) return w.replace(/żna$/,'żnej');
+  if (/na$/i.test(w)) return w.replace(/na$/,'nej');
+  if (/uga$/i.test(w)) return w.replace(/uga$/,'ugiej');
+  if (/ęga$/i.test(w)) return w.replace(/ęga$/,'ęgiej');
+  if (/ga$/i.test(w)) return w.replace(/ga$/,'giej');
+  if (/tka$/i.test(w)) return w.replace(/tka$/,'tkiej');
+  if (/ka$/i.test(w)) return w.replace(/ka$/,'kiej');
+  if (/ła$/i.test(w)) return w.replace(/ła$/,'łej');
+  if (/la$/i.test(w)) return w.replace(/la$/,'lej');
+  if (/ra$/i.test(w)) return w.replace(/ra$/,'rej');
+  if (/ia$/i.test(w)) return w.replace(/ia$/,'iej');
+  if (/a$/i.test(w)) {
+    if (/ona$|ina$|ana$|ena$/i.test(w)) return w; // nazwisko (Ordona, Sacharowa nie - owa już wyżej)
+    return w.replace(/a$/,'ej');
+  }
+  // Męski przymiotnik
+  if (/owy$/i.test(w)) return w.replace(/owy$/,'owego');
+  if (/ały$/i.test(w)) return w.replace(/ały$/,'ałego');
+  if (/ony$/i.test(w)) return w.replace(/ony$/,'onego');
+  if (/iowy$/i.test(w)) return w.replace(/iowy$/,'iowego');
+  if (/ny$/i.test(w)) return w.replace(/ny$/,'nego');
+  if (/ry$/i.test(w)) return w.replace(/ry$/,'rego');
+  if (/ty$/i.test(w)) return w.replace(/ty$/,'tego');
+  if (/ki$/i.test(w)) return w.replace(/ki$/,'kiego');
+  if (/gi$/i.test(w)) return w.replace(/gi$/,'giego');
+  if (/y$/i.test(w)) return w.replace(/y$/,'ego');
+  // Nieodmienne (spółgłoska, skrót)
+  return w;
+}
+
+function renderContract() {
+  const rep = getRep();
+  const price = g('price');
+  const deposit = g('deposit');
+  const deadline = fmtDate(g('deadline'));
+  const city = g('pCity');
+  const street = g('pStreet');
+  const area = g('pArea');
+  const kw = g('pKW');
+  const o = state.ownership;
+  const two = state.buyers==='2';
+
+  const conditionVal = g('condition');
+  const conditionText = getConditionText();
+  const hasCondition = !!conditionText;
+  const conditionLi = hasCondition ? `<li>Nieruchomość jest ${conditionText}.</li>` : '';
+
+  // Pola kupującego — flex row, bez rozjeżdżania
+  const uline = (flex) => `<span style="flex:${flex};border-bottom:1px solid #000;min-width:40px;display:inline-block;height:0.85em;vertical-align:bottom"></span>`;
+  const buyerLine = (n) => `
+    <div style="display:flex;align-items:baseline;gap:4px;flex-wrap:nowrap;margin-bottom:4px">
+      <span style="white-space:nowrap">${n}.</span>
+      ${uline('2')}
+      <span style="white-space:nowrap">zam. ul.</span>
+      ${uline('3')}
+      <span style="white-space:nowrap">,</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:4px;flex-wrap:nowrap;margin-bottom:4px">
+      <span style="white-space:nowrap">legitymującą/ym się dowodem osobistym seria i numer:</span>
+      ${uline('1.5')}
+      <span style="white-space:nowrap">, PESEL:</span>
+      ${uline('1.5')}
+      <span style="white-space:nowrap">,</span>
+    </div>`;
+  const buyerBlock = () => {
+    if (two) return buyerLine('1') + buyerLine('2') + `<p style="margin-top:4px">zwanymi dalej łącznie Kupującym,</p>`;
+    return buyerLine('1') + `<p style="margin-top:4px">zwaną/ym dalej Kupującym,</p>`;
+  };
+
+  let par1 = '';
+  const repAccusative = personAccusative(rep.name);
+  const cityLoc = cityLocative(city);
+  const extraBullets = getExtraBullets();
+  const extraLi = extraBullets.map(b => `<li>${b}</li>`).join('\n      ');
+  const extraDesc = g('pExtraDesc');
+  const extraDescLi = extraDesc ? `<li>${extraDesc}, zwanych dalej łącznie Nieruchomością.</li>` : '';
+
+  if (o==='full') {
+    const ending = extraDesc
+      ? `numer ${blank(kw,'')}, ${extraDesc}, zwanych dalej łącznie Nieruchomością.`
+      : `numer ${blank(kw,'')}, zwanego dalej Nieruchomością.`;
+    const streetLoc1 = streetLocative(street);
+    par1 = `<p>Sprzedający oświadcza, że:</p><ul>
+      <li>Jest właścicielem lokalu stanowiącego odrębną nieruchomość położonego w ${blank(cityLoc||city,'')} przy ulicy ${blank(streetLoc1||street,'')}, o powierzchni użytkowej wraz z powierzchnią pomieszczeń przynależnych ${blank(area,'')} m², dla którego prowadzona jest księga wieczysta ${ending}</li>
+      <li>Nieruchomość nie jest przedmiotem praw lub roszczeń osób trzecich, ograniczeń w rozporządzaniu oraz umów, z których wynikałoby zobowiązanie do jej zbycia na rzecz jakichkolwiek osób.</li>
+      ${conditionLi}
+      ${extraLi}
+    </ul>`;
+  } else if (o==='coop') {
+    const slashIdx = street.lastIndexOf('/');
+    const unit = slashIdx > -1 ? street.substring(slashIdx + 1).trim() : '';
+    const streetNoUnit = slashIdx > -1 ? street.substring(0, slashIdx).trim() : street;
+    const streetLoc2 = streetLocative(streetNoUnit);
+    par1 = `<p>Sprzedający oświadcza, że:</p><ul>
+      <li>Przysługuje mu spółdzielcze własnościowe prawo do lokalu mieszkalnego o numerze ${blank(unit,'')} położonego w ${blank(cityLoc||city,'')} przy ulicy ${blank(streetLoc2||streetNoUnit,'')}, o powierzchni użytkowej lokalu ${blank(area,'')} m²${kw?`, dla którego jest prowadzona księga wieczysta numer ${blank(kw,'')}`:''}, zwane dalej Nieruchomością.</li>
+      <li>Nieruchomość nie jest przedmiotem praw lub roszczeń osób trzecich, ograniczeń w rozporządzaniu oraz umów, z których wynikałoby zobowiązanie do jej zbycia na rzecz jakichkolwiek osób.</li>
+      ${conditionLi}
+      ${extraDescLi}
+      ${extraLi}
+    </ul>`;
+  } else {
+    const plot = g('pPlot'); const areaHA = g('pAreaHA');
+    const streetLoc = streetLocative(street);
+    par1 = `<p>Sprzedający oświadcza, że:</p><ul>
+      <li>Jest właścicielem nieruchomości gruntowej o numerze działki ${blank(plot,'')} położonej w ${blank(cityLoc||city,'')} przy ulicy ${blank(streetLoc||street,'')}, o powierzchni działki ${blank(areaHA,'')} HA, dla której prowadzona jest księga wieczysta numer ${blank(kw,'')}, zwanej dalej Nieruchomością.</li>
+      <li>Nieruchomość nie jest przedmiotem praw lub roszczeń osób trzecich, ograniczeń w rozporządzaniu oraz umów, z których wynikałoby zobowiązanie do jej zbycia na rzecz jakichkolwiek osób.</li>
+      ${conditionLi}
+      ${extraDescLi}
+      ${extraLi}
+    </ul>`;
+  }
+
+  const pw = numberToWords(price);
+  const dw = numberToWords(deposit);
+  const priceFormatted = fmtNumber(price);
+  const depositFormatted = fmtNumber(deposit);
+  const bline = (w='120px') => `<span style="display:inline-block;border-bottom:1px solid #000;min-width:${w};height:1em;vertical-align:bottom"></span>`;
+
+  // Data zawarcia — domyślnie dzisiaj, edytowalna
+  const todayVal = g('contractDate');
+  const todayStr = (() => {
+    if (todayVal) {
+      const [y,m,d] = todayVal.split('-');
+      return `${d}.${m}.${y}`;
+    }
+    const n = new Date();
+    return `${String(n.getDate()).padStart(2,'0')}.${String(n.getMonth()+1).padStart(2,'0')}.${n.getFullYear()}`;
+  })();
+  const year = new Date().getFullYear();
+  const place = state.mode==='remote'
+    ? `zdalnie w dniu <span class="blank f" style="font-style:normal">${todayStr}</span> roku`
+    : `w dniu <span class="blank f" style="font-style:normal">${todayStr}</span> roku w ${bline('120px')}`;
+
+  // Dodatkowe paragrafy (wstawiane przed §8, renumeracja)
+  const extraPars = getExtraPars();
+  let pNum = 8; // §8 to pierwsze ze stałych "końcowych"
+  const extraParsHtml = extraPars.map(txt => {
+    return `<div class="par"><div class="par-title">§ ${pNum++}</div><p>${txt}</p></div>`;
+  }).join('');
+  const p8 = pNum++; const p9 = pNum++; const p10 = pNum;
+
+  const repNum = two ? '3.' : '2.';
+  const repId = rep.id ? rep.id.trim() : '';
+  const repPesel = rep.pesel ? rep.pesel.trim() : '';
+
+  const contractHtml = `<div class="contract" id="contractContent">
+  <h3>Umowa Przedwstępna Kupna - Sprzedaży Nieruchomości</h3>
+  <p class="sub">Zawarta ${place} pomiędzy:</p>
+  ${buyerBlock()}
+  <p style="margin-top:10px">a</p>
+  <p style="margin-top:8px">${repNum} Firmą KMBNO Sp. z o. o. z siedzibą przy ul. Twarda 18, 00-105 Warszawa, NIP: 5252862330, REGON: 388950413, KRS: 0000899554, reprezentowaną przy niniejszej umowie przez ${blank(repAccusative||rep.name,'')}${rep.addr ? ' zam. ' + rep.addr.trim() : ''}, legitymującą/ym się dowodem osobistym seria i numer: ${repId || bline('80px')}, PESEL: ${repPesel || bline('100px')}, działająca/y jako Pełnomocnik spółki KMBNO Sp. z o.o.,</p>
+  <p style="margin-top:6px">zwanym dalej Sprzedającym, zwanymi dalej łącznie Stronami.</p>
+
+  <div class="par"><div class="par-title">§ 1</div>${par1}</div>
+  <div class="par"><div class="par-title">§ 2</div><p>Przedmiotem niniejszej Umowy jest sprzedaż na rzecz Kupującego Nieruchomości, szczegółowo opisanej w § 1 niniejszej Umowy.</p></div>
+  <div class="par"><div class="par-title">§ 3</div><p>Kupujący oświadcza, że zapoznał się ze stanem faktycznym i technicznym nieruchomości, nie wnosi do niego żadnych zastrzeżeń oraz potwierdza, że stan ten jest mu znany i akceptowany.</p></div>
+  <div class="par"><div class="par-title">§ 4</div><p>Sprzedający oświadcza, że zobowiązuje się sprzedać Kupującemu opisaną w § 1 Nieruchomość za cenę w kwocie ${priceFormatted ? priceFormatted + ' PLN (słownie: ' + (pw||'') + ' złotych)' : bline('120px') + ' zł (słownie: ' + bline('200px') + ' złotych)'}.</p></div>
+  <div class="par"><div class="par-title">§ 5</div><p>Strony zgodnie oświadczają, że umowa przyrzeczona kupna - sprzedaży przedmiotowej Nieruchomości zostanie zawarta do dnia ${blank(deadline,'')} roku.</p></div>
+  <div class="par"><div class="par-title">§ 6</div><ul>
+    <li>Na mocy niniejszej Umowy Kupujący wniesie na rzecz Sprzedającego tytułem kupna Nieruchomości zadatek, w rozumieniu art. 394. KC, w kwocie ${depositFormatted ? depositFormatted + ' PLN (słownie: ' + (dw||'') + ' złotych)' : bline('120px') + ' zł (słownie: ' + bline('200px') + ' złotych)'}.</li>
+    <li>Wskazaną kwotę Kupujący zapłaci przelewem, na rachunek bankowy Sprzedającego o numerze <strong>${ACCOUNT}</strong>, w terminie 2 dni roboczych od podpisania niniejszej Umowy, na co Sprzedający niniejszym wyraża zgodę.</li>
+    <li>W razie niewykonania niniejszej Umowy przez Sprzedającego, zwróci On Kupującemu kwotę zadatku w podwójnej wysokości.</li>
+    <li>W razie niewykonania Umowy przez Kupującego, traci On zadatek na rzecz Sprzedającego.</li>
+  </ul></div>
+  <div class="par"><div class="par-title">§ 7</div><ul>
+    <li>Wraz z zawarciem przez Strony przyrzeczonej umowy kupna - sprzedaży Nieruchomości, kwota zadatku szczegółowo określona w § 6 niniejszej Umowy, zostanie zaliczona na poczet ceny sprzedaży Nieruchomości.</li>
+    <li>Reszta ceny sprzedaży zostanie zapłacona przelewem na rachunek bankowy spółki nr: ${ACCOUNT}.</li>
+  </ul></div>
+  ${extraParsHtml}
+  <div class="par"><div class="par-title">§ ${p8}</div><ul>
+    <li>Wszelkie zmiany dotyczące niniejszej Umowy muszą być dokonane na piśmie, w formie aneksu pod rygorem nieważności.</li>
+    <li>W sprawach nieuregulowanych niniejszą Umową zastosowanie mają przepisy Kodeksu Cywilnego.</li>
+  </ul></div>
+  <div class="par"><div class="par-title">§ ${p9}</div><p>Koszty notariusza wraz z podatkiem PCC pokrywa strona Kupująca.</p></div>
+  <div class="par"><div class="par-title">§ ${p10}</div><p>Umowa została sporządzona w dwóch jednobrzmiących egzemplarzach, po jednym dla każdej ze Stron.</p></div>
+
+  <div class="sig">
+    <div><div class="line">SPRZEDAJĄCY<br>czytelny podpis imię i nazwisko</div></div>
+    <div><div class="line">KUPUJĄCY<br>czytelny podpis imię i nazwisko</div></div>
+  </div>
+</div>`;
+
+  document.getElementById('previewPane').innerHTML = `
+    <div class="contract-actions">
+      <button class="btn btn-secondary" style="flex:0;padding:8px 16px" onclick="copyContract()">Kopiuj tekst</button>
+      <button class="btn btn-secondary" style="flex:0;padding:8px 16px" id="btnEditContract" onclick="toggleEditContract()">✏️ Edytuj</button>
+      <button class="btn btn-primary" style="flex:0;padding:8px 16px" onclick="downloadPDF()">PDF</button>
+    </div>
+    <div class="contract-wrap" id="contractWrap">${contractHtml}</div>`;
+}
+
+function toggleEditContract() {
+  const content = document.getElementById('contractContent');
+  const btn = document.getElementById('btnEditContract');
+  if (!content || !btn) return;
+  const isEditing = content.contentEditable === 'true';
+  if (isEditing) {
+    content.contentEditable = 'false';
+    content.style.outline = '';
+    btn.textContent = '✏️ Edytuj';
+    btn.style.background = '';
+    btn.style.color = '';
+  } else {
+    content.contentEditable = 'true';
+    content.style.outline = '2px solid var(--accent)';
+    content.style.outlineOffset = '4px';
+    content.focus();
+    btn.textContent = '✅ Zakończ edycję';
+    btn.style.background = 'var(--green-bg)';
+    btn.style.color = 'var(--green)';
+  }
+}
+
+function copyContract() {
+  const txt = document.getElementById('contractContent')?.innerText || document.getElementById('previewPane').innerText;
+  navigator.clipboard.writeText(txt).then(() => {
+    const b = event.target;
+    b.textContent = 'Skopiowano!';
+    setTimeout(() => b.textContent = 'Kopiuj tekst', 2000);
+  });
+}
+
+// ---- PDF via printable HTML blob ----
+function downloadDOCX() {
+  const el = document.getElementById('contractContent');
+  if (!el) { alert('Najpierw wygeneruj umowę klikając "Generuj umowę".'); return; }
+
+  const btn = document.getElementById('btnDocx');
+  if (btn) { btn.textContent = '⏳ Generuję...'; btn.disabled = true; }
+
+  // Pobierz tekst umowy jako plain text
+  const contractText = el.innerText || el.textContent || '';
+  const city = (document.getElementById('pCity')?.value || 'umowa').replace(/\s+/g,'_');
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: `Masz poniższy tekst polskiej umowy przedwstępnej. Wygeneruj plik DOCX jako base64-encoded string.
+
+Wymagania formatowania:
+- Font: Times New Roman, rozmiar 11pt
+- Marginesy: 2.5cm góra/dół, 2cm lewo/prawo
+- Tekst justowany
+- Tytuł wyśrodkowany, pogrubiony
+- Nagłówki paragrafów (§1, §2 itd.) wyśrodkowane, pogrubione
+- Listy punktowane bez wcięć nadmiarowych
+- Podpisy na końcu w dwóch kolumnach
+
+Odpowiedz TYLKO i WYŁĄCZNIE surowym base64 pliku DOCX, bez żadnego tekstu, cudzysłowów, backtick, markdown.
+
+TEKST UMOWY:
+${contractText}`
+      }]
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const b64 = data.content?.[0]?.text?.trim();
+    if (!b64 || b64.length < 100) {
+      // Fallback: pobierz jako HTML → użytkownik otworzy w Word
+      downloadDOCXFallback(city);
+      return;
+    }
+    try {
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `Umowa_${city}.docx`;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch(e) {
+      downloadDOCXFallback(city);
+    }
+  })
+  .catch(() => downloadDOCXFallback(city))
+  .finally(() => {
+    if (btn) { btn.textContent = 'DOCX'; btn.disabled = false; }
+  });
+}
+
+function downloadDOCXFallback(city) {
+  // Fallback: HTML z nagłówkami Word — otwierany przez MS Word
+  const el = document.getElementById('contractContent');
+  if (!el) return;
+  const html = `<html xmlns:o='urn:schemas-microsoft-com:office:office'
+    xmlns:w='urn:schemas-microsoft-com:office:word'
+    xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='UTF-8'>
+<style>
+  body { font-family: "Times New Roman", serif; font-size: 11pt; margin: 2.5cm 2cm; }
+  h3 { text-align: center; font-size: 12pt; }
+  p { text-align: justify; line-height: 1.5; }
+  .par-title { text-align: center; font-weight: bold; }
+  ul { list-style: disc; padding-left: 1cm; }
+  li { text-align: justify; }
+  .sig { display: flex; justify-content: space-between; margin-top: 3cm; }
+  .line { border-top: 1px solid #000; width: 200px; text-align: center; padding-top: 4px; font-size: 9pt; }
+</style>
+</head>
+<body>${el.innerHTML}</body></html>`;
+  const blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `Umowa_${city}.doc`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function downloadPDF() {
+  const el = document.getElementById('contractContent');
+  if (!el) { alert('Najpierw wygeneruj umowę klikając "Generuj umowę".'); return; }
+
+  // Auto-zapis do historii przy każdym PDF
+  saveToHistory();
+
+  const city = (document.getElementById('pCity')?.value || 'umowa').replace(/\s+/g,'_');
+
+  const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Umowa_${city}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:"Times New Roman",Times,serif;font-size:11pt;line-height:1.65;color:#000;background:#fff}
+  .strona{max-width:21cm;margin:0 auto;padding:2cm 1.2cm}
+  h3{text-align:center;font-weight:bold;font-size:12pt;margin-bottom:0.8em;text-transform:uppercase;letter-spacing:0.03em}
+  .sub{text-align:center;margin-bottom:1.2em;font-size:10.5pt;color:#333}
+  .par{margin-bottom:1em;page-break-inside:avoid;break-inside:avoid}
+  .par-title{page-break-after:avoid;break-after:avoid}
+  .par ul{orphans:2;widows:2}
+  .par-title{text-align:center;font-weight:bold;font-size:11pt;margin-bottom:0.4em}
+  p{text-align:justify;font-size:10.5pt;line-height:1.65;margin-bottom:0.3em}
+  ul{padding-left:1.2em;margin:0.3em 0}
+  li{text-align:justify;font-size:10.5pt;line-height:1.65;margin-bottom:0.3em}
+  .blank{display:inline;border-bottom:1px solid #555;color:#555}
+  .blank.f{display:inline;color:#000;border-bottom:none}
+  .sig{width:100%;margin-top:3em;display:flex;justify-content:space-between}
+  .sig>div{width:44%;text-align:center}
+  .sig .line{border-top:1px solid #000;padding-top:0.3em;margin-top:2.5em;font-size:9.5pt;color:#333}
+  .druk-btn{text-align:center;margin-bottom:1.2cm;display:flex;gap:10px;justify-content:center}
+  button{padding:9px 22px;font-size:13px;background:#1a1916;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:inherit}
+  @media print{.druk-btn{display:none!important}}
+</style>
+</head>
+<body>
+<div class="strona">
+<div class="druk-btn">
+  <button onclick="window.print()">Zapisz jako PDF / Drukuj</button>
+</div>
+${el.innerHTML}
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Umowa_' + city + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+
+
+// Init
+renderPropertyFields();
+fetchAgents().then(() => {
+  if (state.mode === 'local') renderRepSection();
+});
+renderRepSection();
+loadProperties();
+renderSavedBullets();
+renderHistory();
+document.getElementById('btnSaveHistory')?.addEventListener('click', saveToHistory);
+
+// ============================================================
+// BAZA DOKUMENTÓW — persistent storage
+// ============================================================
+
+function switchView(view) {
+  const appEl = document.querySelector('.app');
+  const docsEl = document.getElementById('docsPanel');
+  const btnGen = document.getElementById('navGenerator');
+  const btnDoc = document.getElementById('navDocs');
+  const btnRow = document.querySelector('.btn-row');
+
+  if (view === 'docs') {
+    appEl.style.display = 'none';
+    if (btnRow) btnRow.style.display = 'none';
+    docsEl.style.display = 'flex';
+    btnGen.classList.remove('active');
+    btnDoc.classList.add('active');
+    renderDocList();
+  } else {
+    appEl.style.display = 'flex';
+    if (btnRow) btnRow.style.display = 'flex';
+    docsEl.style.display = 'none';
+    btnGen.classList.add('active');
+    btnDoc.classList.remove('active');
+  }
+}
+
+// Persistent storage helpers
+async function storageSave(key, value) {
+  try { await window.storage.set(key, value); } catch(e) { console.error('storage save:', e); }
+}
+async function storageGet(key) {
+  try { const r = await window.storage.get(key); return r ? r.value : null; } catch(e) { return null; }
+}
+async function storageDelete(key) {
+  try { await window.storage.delete(key); } catch(e) {}
+}
+async function storageList(prefix) {
+  try { const r = await window.storage.list(prefix); return r ? r.keys : []; } catch(e) { return []; }
+}
+
+// Upload obsługa
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  const category = document.getElementById('docCategory').value;
+  const desc = document.getElementById('docDesc').value.trim();
+
+  for (const file of files) {
+    const reader = new FileReader();
+    await new Promise(resolve => {
+      reader.onload = async (ev) => {
+        const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+        const meta = {
+          id, name: file.name, category, desc,
+          type: file.type, size: file.size,
+          added: new Date().toISOString()
+        };
+        // Zapis metadanych
+        await storageSave('docmeta_' + id, JSON.stringify(meta));
+        // Zapis danych (base64)
+        await storageSave('docdata_' + id, ev.target.result);
+        resolve();
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('fileInput').value = '';
+  document.getElementById('docDesc').value = '';
+  renderDocList();
+});
+
+// Drag & drop na label
+const uploadLabel = document.getElementById('uploadLabel');
+uploadLabel.addEventListener('dragover', e => { e.preventDefault(); uploadLabel.style.borderColor = 'var(--accent-bg)'; });
+uploadLabel.addEventListener('dragleave', () => { uploadLabel.style.borderColor = 'var(--border)'; });
+uploadLabel.addEventListener('drop', async (e) => {
+  e.preventDefault();
+  uploadLabel.style.borderColor = 'var(--border)';
+  const dt = new DataTransfer();
+  Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+  document.getElementById('fileInput').files = dt.files;
+  document.getElementById('fileInput').dispatchEvent(new Event('change'));
+});
+
+let allDocs = [];
+
+async function renderDocList(filter) {
+  const list = document.getElementById('docList');
+  list.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:20px">Ładowanie...</div>';
+
+  // Pobierz wszystkie klucze metadanych
+  const keys = await storageList('docmeta_');
+  allDocs = [];
+  for (const key of keys) {
+    const raw = await storageGet(key);
+    if (raw) { try { allDocs.push(JSON.parse(raw)); } catch(e) {} }
+  }
+  // Sortuj od najnowszego
+  allDocs.sort((a,b) => b.added.localeCompare(a.added));
+
+  const filtered = filter
+    ? allDocs.filter(d => d.name.toLowerCase().includes(filter) || (d.desc||'').toLowerCase().includes(filter) || d.category.toLowerCase().includes(filter))
+    : allDocs;
+
+  if (!filtered.length) {
+    list.innerHTML = '<div style="font-size:11px;color:var(--text3);text-align:center;padding:30px">Brak dokumentów.<br>Dodaj pierwszy plik powyżej.</div>';
+    return;
+  }
+
+  // Grupuj po kategorii
+  const grouped = {};
+  filtered.forEach(d => { if (!grouped[d.category]) grouped[d.category] = []; grouped[d.category].push(d); });
+
+  list.innerHTML = '';
+  for (const [cat, docs] of Object.entries(grouped)) {
+    const catDiv = document.createElement('div');
+    catDiv.style.cssText = 'font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;padding:8px 4px 4px';
+    catDiv.textContent = cat;
+    list.appendChild(catDiv);
+
+    docs.forEach(doc => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:var(--radius);cursor:pointer;margin-bottom:2px;transition:background .1s';
+      row.onmouseover = () => row.style.background = 'var(--surface2)';
+      row.onmouseout = () => row.style.background = '';
+
+      const icon = doc.type === 'application/pdf' ? '📄' : doc.type.startsWith('image/') ? '🖼️' : '📝';
+      const size = doc.size > 1048576 ? (doc.size/1048576).toFixed(1)+'MB' : Math.round(doc.size/1024)+'KB';
+      const dateStr = new Date(doc.added).toLocaleDateString('pl-PL');
+
+      const info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0';
+      info.innerHTML = `<div style="font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${icon} ${doc.name}</div>
+        <div style="font-size:10px;color:var(--text3)">${doc.desc || ''} · ${size} · ${dateStr}</div>`;
+      info.addEventListener('click', () => previewDoc(doc));
+
+      const delBtn = document.createElement('button');
+      delBtn.textContent = '✕';
+      delBtn.style.cssText = 'padding:2px 6px;font-size:10px;background:transparent;border:none;color:var(--text3);cursor:pointer;border-radius:var(--radius);flex-shrink:0';
+      delBtn.onmouseover = () => { delBtn.style.color='var(--red)'; delBtn.style.background='var(--red-bg)'; };
+      delBtn.onmouseout = () => { delBtn.style.color='var(--text3)'; delBtn.style.background='transparent'; };
+      delBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await storageDelete('docmeta_' + doc.id);
+        await storageDelete('docdata_' + doc.id);
+        renderDocList(document.getElementById('docSearch').value.trim().toLowerCase() || undefined);
+        document.getElementById('docPreviewName').textContent = 'Wybierz dokument z listy';
+        document.getElementById('docPreviewArea').innerHTML = '<div style="text-align:center;color:var(--text3)"><div style="font-size:40px;margin-bottom:8px">📂</div>Brak wybranego dokumentu</div>';
+        document.getElementById('docDownloadBtn').style.display = 'none';
+      });
+
+      row.appendChild(info);
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    });
+  }
+}
+
+async function previewDoc(doc) {
+  document.getElementById('docPreviewName').textContent = doc.name;
+  const area = document.getElementById('docPreviewArea');
+  const dlBtn = document.getElementById('docDownloadBtn');
+
+  area.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:40px;text-align:center">⏳ Ładowanie podglądu...</div>';
+  dlBtn.style.display = 'inline-block';
+
+  const data = await storageGet('docdata_' + doc.id);
+  if (!data) { area.innerHTML = '<div style="color:var(--text3);padding:40px;text-align:center">Nie można wczytać pliku.</div>'; return; }
+
+  if (doc.type === 'application/pdf') {
+    try {
+      // Ustaw worker PDF.js
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+      // Dekoduj base64 → Uint8Array
+      const base64 = data.includes(',') ? data.split(',')[1] : data;
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+      const pdfDoc = await pdfjsLib.getDocument({ data: bytes }).promise;
+      const numPages = pdfDoc.numPages;
+
+      // Kontener na strony
+      area.innerHTML = '';
+      area.style.overflowY = 'auto';
+      area.style.background = '#e0ddd5';
+      area.style.padding = '16px';
+
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.4 });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.cssText = 'display:block;width:100%;max-width:800px;margin:0 auto 12px;box-shadow:0 2px 12px rgba(0,0,0,.2);border-radius:2px;background:#fff';
+
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        area.appendChild(canvas);
+      }
+    } catch(e) {
+      console.error('PDF preview error:', e);
+      area.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">
+        <div style="font-size:48px;margin-bottom:12px">📄</div>
+        <div style="font-size:14px;margin-bottom:8px">${doc.name}</div>
+        <div style="font-size:12px;color:var(--text3)">Nie udało się załadować podglądu.<br>Użyj przycisku Pobierz.</div>
+      </div>`;
+    }
+  } else if (doc.type.startsWith('image/')) {
+    area.innerHTML = '';
+    area.style.padding = '20px';
+    const img = document.createElement('img');
+    img.src = data;
+    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 4px 20px rgba(0,0,0,.15);border-radius:4px;display:block;margin:0 auto';
+    area.appendChild(img);
+  } else {
+    area.innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">
+      <div style="font-size:48px;margin-bottom:12px">📝</div>
+      <div style="font-size:14px;margin-bottom:4px">${doc.name}</div>
+      <div style="font-size:12px;color:var(--text3)">Ten format nie obsługuje podglądu.<br>Pobierz plik żeby go otworzyć.</div>
+    </div>`;
+  }
+
+  dlBtn.onclick = () => {
+    const a = document.createElement('a');
+    a.href = data; a.download = doc.name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  };
+}
+
+function filterDocs(val) {
+  renderDocList(val.trim().toLowerCase() || undefined);
+}
+
+// Ustaw dzisiejszą datę jako domyślną
+const _today = new Date();
+const _todayStr = _today.getFullYear() + '-' + String(_today.getMonth()+1).padStart(2,'0') + '-' + String(_today.getDate()).padStart(2,'0');
+document.getElementById('contractDate').value = _todayStr;
+</script>
+</body>
+</html>

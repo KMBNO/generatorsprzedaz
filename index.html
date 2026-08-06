@@ -683,8 +683,7 @@ const BOARD_ID = "5030473445";
 const REMOTE_REPS = [
   {name:"Tomasz Drewnik", addr:"ul. Głęboka 88/108, Warszawa", id:"DHM 171555", pesel:"96060408531"},
   {name:"Ewa Dzierzgowska", addr:"ul. Krótka 19, 18-400 Stare Kupiski", id:"CEI929880", pesel:"99030311460"},
-  {name:"Zuzanna Jaszke", addr:"ul. Białej Floty 2 lok. 13, 02-654 Warszawa", id:"CHY 872042", pesel:"01291603303"},
-  {name:"Natalia Elżbieta Stępniak", addr:"ul. Wolska 15/23, 01-201 Warszawa", id:"CHI 555381", pesel:"95120206322"}
+  {name:"Zuzanna Jaszke", addr:"ul. Białej Floty 2 lok. 13, 02-654 Warszawa", id:"CHY 872042", pesel:"01291603303"}
 ];
 
 let state = { mode:"remote", ownership:"full", buyers:"1", remoteRepIdx:0, localRep:null };
@@ -712,7 +711,20 @@ initPills('buyersGroup', 'buyers');
 // Pośrednicy — lista statyczna
 const LOCAL_AGENTS = [{"id":"2792348500","name":"Paweł Danys","pesel":"","addr":"ul. Ostródzka 118A m.36, 03-289 Warszawa","dowod":""},{"id":"2768493012","name":"Monika Prasał","pesel":"76071010240","addr":"26-225 Bębnów, Lipowa 2","dowod":"CFW 310175"},{"id":"2768220769","name":"Aleksandra Julia Pocięgiel","pesel":"02280207429","addr":"Karmelicka 67/7","dowod":"DEF 603575"},{"id":"2767880048","name":"Natalia Karolina Synak-Rzeczycka","pesel":"84101503048","addr":"ul. Rumiankowa 5, Kosowo","dowod":"dgt487438"},{"id":"2728989569","name":"Magda Maria Podwojewska","pesel":"80062904546","addr":"ul. Strzegomska 14","dowod":"cdm283107"},{"id":"2650797759","name":"Bartosz Maj","pesel":"88021017092","addr":"Jurajska 7, 25-640 Kielce","dowod":"DBR 537691"},{"id":"2650789959","name":"Julia Paszko","pesel":"04250610325","addr":"Lipiny Dolne 155, 23-423 Potok Górny","dowod":"DBS 914833"},{"id":"2650798184","name":"Monika Ogonowska","pesel":"98112002742","addr":"ul. Niepodległości 57/29, 10-044 Olsztyn","dowod":"CDL148669"},{"id":"2650798193","name":"Ewa Wiśnios","pesel":"96021700089","addr":"ul. Nadmorska 66, 78-132 Grzybowo","dowod":"DIC 930890"},{"id":"2650795429","name":"Daniel Mościński","pesel":"82071400734","addr":"ul. Kostromska 68/19, 97-300 Piotrków Trybunalski","dowod":"DBH 816532"},{"id":"2650796025","name":"Tomasz Duda","pesel":"5270904951","addr":"Olbrachtów 120C, 68-200 Żary","dowod":"CHA116074"},{"id":"2650797902","name":"Maciej Michał Majewski","pesel":"90072811938","addr":"Marcinkowo 179, 11-700 Mrągowo","dowod":"DCE139462"},{"id":"2650795467","name":"Natalia Górecka","pesel":"03240701346","addr":"ul. Długa 34/17, Włocławek","dowod":"CHD 002080"},{"id":"2650790067","name":"Jakub Filip Frącz","pesel":"01240804052","addr":"Pasieka Wałowska 11A, 96-200 Rawa Mazowiecka","dowod":"DAP 387930"},{"id":"2650797760","name":"Marlena Anna Borkowska-Siedlarz","pesel":"95031504267","addr":"Ptaszkowa 870, 33-333 Ptaszkowa","dowod":"CEF 952744"},{"id":"2650797260","name":"Martyna Biczel","pesel":"93061500927","addr":"Reymonta 17C, 59-900 Zgorzelec","dowod":"DCL827810"},{"id":"2650797261","name":"Grzegorz Zaremba","pesel":"87090106270","addr":"Na Skarpie 10, 06-100 Pułtusk","dowod":"DIZ 895583"},{"id":"2650797475","name":"Bartłomiej Tadeusz Laszuk","pesel":"92051102374","addr":"ul. Kościuszki 48/7, 14-500 Braniewo","dowod":"DGP606776"},{"id":"2650795317","name":"Małgorzata Justyna Matuszyk","pesel":"95020900544","addr":"Os. Pod Skarpą 26/8, 34-100 Wadowice","dowod":"DID 862048"},{"id":"2650797262","name":"Klaudia Magdalena Łuczak","pesel":"92061906887","addr":"ul. Zacisze 3, 42-450 Ciągowice","dowod":"Dbk 697349"},{"id":"2650796028","name":"Władysław Zwiranowski","pesel":"00303110914","addr":"ul. Przyszła 5, 96-500 Sochaczew","dowod":"CHX 712080"},{"id":"2650789845","name":"Paweł Sebastian Drzewiecki","pesel":"80053001531","addr":"ul. Modrakowa 76/44, 85-864 Bydgoszcz","dowod":"CCL 744530"},{"id":"2650840421","name":"Marcin Brzostowski","pesel":"98012700395","addr":"Kalinowa 3, 12-200 Pisz","dowod":""},{"id":"2650784291","name":"Aleksandra Chomka","pesel":"00271405265","addr":"Lipowa 38, 08-110 Rakowiec","dowod":"CHC 437429"},{"id":"2650791928","name":"Daria Knappe","pesel":"86062907961","addr":"ul. o. S. Niedbały 7/2, 63-200 Jarocin","dowod":"CHZ 287544"},{"id":"2650840383","name":"Alina Bułhak","pesel":"63112407521","addr":"ul. Za Wiatrakiem 5c/5, 72-006 Mierzyn","dowod":"CGM798242"},{"id":"2650840384","name":"Magdalena Malińska","pesel":"92051703902","addr":"ul. Morenowa 9/89, 10-687 Bartąg","dowod":"DAR966672"},{"id":"2650784059","name":"Natalia Pawłowska","pesel":"01272006967","addr":"Żeromskiego 4/1, 64-200 Wolsztyn","dowod":"CEJ 238107"},{"id":"2650784176","name":"Justyna Wilkosz","pesel":"87113011228","addr":"ul. Barlickiego 10/16, 72-600 Świnoujście","dowod":"DBJ160046"},{"id":"2650784055","name":"Barbara Polanowska","pesel":"71011006549","addr":"ul. Ofiar Katynia 10/58, 35-209 Rzeszów","dowod":"DCW 894824"},{"id":"2650791803","name":"Olga Hryniewicz","pesel":"95050304327","addr":"Szafirowa 3, 62-200 Gniezno","dowod":"DEA 901827"},{"id":"2650840312","name":"Bożena Ostrowska","pesel":"69080100163","addr":"Kromera 2/14, 85-790 Bydgoszcz","dowod":""},{"id":"2650792147","name":"Beata Rydz","pesel":"87071712827","addr":"Tuwima 2, 17-100 Bielsk Podlaski","dowod":"DCJ 457646"},{"id":"2650791796","name":"Aleksandra Gołąb","pesel":"04252608267","addr":"Koszalińska 98D/10, 78-400 Szczecinek","dowod":"DEK 227569"},{"id":"2650840134","name":"Marlena Dróżdż","pesel":"88100313121","addr":"ul. Leśna 5, 05-300 Podrudzie","dowod":"DEV 883863"},{"id":"2650791813","name":"Julia Szpoper","pesel":"97110404808","addr":"Towarowa 13/13, 64-100 Leszno","dowod":"DAE167207"},{"id":"2650791366","name":"Dagmara Patrycja Kowal","pesel":"90022800885","addr":"Powstańców Śląskich 11, 55-110 Prusice","dowod":"DIR 399786"},{"id":"2650791481","name":"Joanna Ziółkowska","pesel":"84050404304","addr":"Orla 49/64, 59-300 Lubin","dowod":"DFA 793553"},{"id":"2650792150","name":"Magda Wójcik","pesel":"98040303289","addr":"Kawaleryjska 8/2, 20-552 Lublin","dowod":"CCD 888304"},{"id":"2650840066","name":"Edyta Zimnicka","pesel":"97120402203","addr":"Pomorska 29/15, 44-335 Jastrzębie Zdrój","dowod":"DGF 380252"},{"id":"2650840609","name":"Zuzanna Monika Cymańska","pesel":"02250504783","addr":"Wybickiego 16D/5, 87-100 Toruń","dowod":"CFB397874"},{"id":"2653208899","name":"Rafał Ostrowski","pesel":"82061406814","addr":"Mostowa 18/2, 59-700 Bolesławiec","dowod":"DJA 065108"},{"id":"2653354582","name":"Damian Jakub Rudyj","pesel":"95082213279","addr":"Buczki 3, 47-143 Buczki","dowod":"DAI 937958"},{"id":"2653460580","name":"Agata Monika Gliniecka","pesel":"84040403425","addr":"Radosna Dolina 1, 83-304 Kosowo","dowod":"DCT 090753"},{"id":"2653500121","name":"Paulina Krystyna Górska","pesel":"94010700863","addr":"Migdałowa 8, 68-111 Stary Żagań","dowod":"DBM765145"},{"id":"2653491272","name":"Łukasz Krzysztof Pluta","pesel":"91081605699","addr":"Książ Wielki 17, 32-210 Moczydło","dowod":"DIP 912024"},{"id":"2650840087","name":"Klaudia Żaneta Mochalska","pesel":"03302810083","addr":"Obozowa 32/34 m. 3, 62-800 Kalisz","dowod":"DCU 729623"},{"id":"2671415926","name":"Natalia Maria Wołczyńska","pesel":"00301505220","addr":"Józefowska 57B, 26-617 Radom","dowod":"DJG763358"},{"id":"2653477984","name":"Weronika Sakowska","pesel":"99041202843","addr":"Szmaragdowa 23/30","dowod":"DKS 290826"},{"id":"2653478335","name":"Monika Katarzyna Malina","pesel":"88042015046","addr":"Trzebunia 710, 32-438 Trzebunia","dowod":"CCF863945"},{"id":"2650792130","name":"Anna Lewandowska","pesel":"86051507444","addr":"ul. Głęboka 4B/16, 98-300 Wieluń","dowod":"DGE512298"},{"id":"2717685177","name":"Magdalena Helena Aftanas","pesel":"85012809087","addr":"Stary Wielisław 135, 57-313","dowod":"DIK874886"},{"id":"2738462411","name":"Maja Zawlik","pesel":"05251900886","addr":"Zawadka 1A, 62-641 Olszówka","dowod":"DBE 447320"},{"id":"2743034129","name":"Monika Maćkowiak","pesel":"92110603424","addr":"Kukadło 2","dowod":"DAN864859"},{"id":"2754180894","name":"Łukasz Rakowski","pesel":"79031800134","addr":"ul. Spacerowa 18, 05-152 Sowia Wola","dowod":"DEA784275"},{"id":"2770674902","name":"Patrycja Agata Iskra","pesel":"94082709126","addr":"57-550 Stronie Śląskie","dowod":"DJH368211"},{"id":"2812492358","name":"Błażej Braciszewski","pesel":"96070900959","addr":"ul. Świętokrzyska 52B, Chodzież","dowod":"CCS350321"},{"id":"2812507297","name":"Karol Tomasz Strycharz","pesel":"04221804593","addr":"ul. Graniczna 8, Mirsk","dowod":"DKN075381"},{"id":"2650797719","name":"Kinga Gielniewska","pesel":"95090204904","addr":"Batalionu Parasol 21/35, Płock","dowod":"DGP 563273"},{"id":"2650790278","name":"Maciej Domagała","pesel":"73100408614","addr":"Grochowa 2 lok. 6, 53-424 Wrocław","dowod":"DEB 060282"},{"id":"2650796290","name":"Marcin Wincek","pesel":"87082500279","addr":"Małachowskiego 1/9, Słupsk","dowod":"DAC 875546"},{"id":"2650802989","name":"Patryk Piotrowski","pesel":"02270105955","addr":"ul. Cegielniana 3/1, 89-500 Tuchola","dowod":"DBR 425341"},{"id":"2650798030","name":"Marcin Kelich","pesel":"77121303918","addr":"ul. Wyspiańskiego 11/8, 64-920 Piła","dowod":"DEU 251650"},{"id":"2650795362","name":"Magdalena Mania","pesel":"80091908049","addr":"ul. Wyszyńskiego 58, 66-400 Gorzów Wlkp.","dowod":"DED 241681"},{"id":"2650796044","name":"Karolina Sarnowska","pesel":"77042206004","addr":"ul. Mieleszyńska 32, 60-008 Poznań","dowod":"DHR 384057"},{"id":"2650789954","name":"Dorota Orwat","pesel":"65102403902","addr":"Szamarzewskiego 103/3, 60-568 Poznań","dowod":"DIZ 587464"},{"id":"2650798017","name":"Filip Ławniczak","pesel":"00322004911","addr":"ul. Spółdzielców 27/7, 62-510 Konin","dowod":"DIY 472882"},{"id":"2650798115","name":"Monika Winiarska","pesel":"84070509841","addr":"ul. Zawadzkiego Zośki 57/13, 65-530 Zielona Góra","dowod":"DBC 931092"},{"id":"2650797847","name":"Martyna Wilk-Kuryłowicz","pesel":"00290601923","addr":"ul. Obrońców Pokoju 20C/4, 67-200 Głogów","dowod":"DID 701138"},{"id":"2650790335","name":"Patrycja Derda","pesel":"87020814662","addr":"ul. 22 Stycznia 8/2, 48-304 Nysa","dowod":""},{"id":"2650790337","name":"Klaudiusz Borowski","pesel":"01260506819","addr":"Kościuszki 12/13, 40-049 Katowice","dowod":"DLA 022194"},{"id":"2650796297","name":"Paulina Berlińska","pesel":"98041708984","addr":"ul. Wiosenna 23H, 41-253 Czeladź","dowod":""},{"id":"2650806571","name":"Agnieszka Florek","pesel":"80033014443","addr":"Grondysa 45A/16, Bielsko-Biała","dowod":"CGY 013752"},{"id":"2650800638","name":"Joanna Mościcka","pesel":"85013109124","addr":"ul. Robotnicza 204/11, 82-300 Elbląg","dowod":"DFL 994618"},{"id":"2650784113","name":"Kornel Jagielski","pesel":"01301605194","addr":"ul. Żołnierska 14D/45, 10-561 Olsztyn","dowod":"CBV 526094"},{"id":"2650799177","name":"Izabela Augustynowicz","pesel":"78110512423","addr":"ul. Konstytucji 3 Maja, 15-776 Białystok","dowod":"DAW 615096"},{"id":"2650798408","name":"Wiesława Macielak","pesel":"66080809184","addr":"ul. Pułtuska 62a/17, 06-400 Ciechanów","dowod":"DKZ 779980"},{"id":"2650840571","name":"Agnieszka Chmiel","pesel":"84091800943","addr":"Kochanowskiego 2, Sandomierz","dowod":"DFW 042604"},{"id":"2650840068","name":"Magdalena Fliśnik","pesel":"98041508126","addr":"ul. Józefa Sowińskiego 3A, 32-020 Wieliczka","dowod":"DAW 362727"},{"id":"2650840187","name":"Jakub Ćwiąkała","pesel":"00321503893","addr":"ul. Lanckorońska 2/3, 30-545 Kraków","dowod":"CCY 632980"},{"id":"2650839932","name":"Justyna Goluch","pesel":"93071811527","addr":"ul. Kopisto 11/192, 35-315 Rzeszów","dowod":"DCL 771319"},{"id":"2650840090","name":"Hubert Konsur","pesel":"98070605414","addr":"Cieszyna nr 152, 38-125","dowod":"CBW 594546"},{"id":"2650799180","name":"Dawid Legejza","pesel":"96121910836","addr":"ul. Wita Stwosza 4A, 37-700 Przemyśl","dowod":"DIT 824800"},{"id":"2650798630","name":"Martyna Ziarkiewicz","pesel":"83092804208","addr":"ul. Pułaskiego 8, 08-530 Dęblin","dowod":"DBD 145731"},{"id":"2650798858","name":"Piotr Baran","pesel":"85021507598","addr":"Zajączkowice 2A, 27-425 Waśniów","dowod":"CBP 833770"},{"id":"2650839859","name":"Marta Rotter","pesel":"92120112545","addr":"Kwiatowa 27, Bystre","dowod":"DBW 702739"},{"id":"2650792129","name":"Paulina Błachnio","pesel":"89092901006","addr":"ul. Stamma 5/35, 84-300 Lębork","dowod":"CFX 913672"},{"id":"2650798477","name":"Emilia Walczak","pesel":"99091608149","addr":"ul. Piaskowa 28/74, 23-200 Kraśnik","dowod":"CFU 509782"},{"id":"new_001","name":"Barbara Maria Wychowaniec","pesel":"83052102364","addr":"42-233 Kolonia Wierzchowisko, ul. Źródlana 15","dowod":"CCS150176"},{"id":"new_002","name":"Klaudia Wichowska","pesel":"04211505585","addr":"78-331 Rąbino, ul. Biernów 10/3","dowod":""},{"id":"new_003","name":"Agnieszka Stec","pesel":"03321404942","addr":"74-500 Chojna, Krajnik Dolny 42/1","dowod":""},{"id":"new_004","name":"Adam Figurski","pesel":"83072410955","addr":"ul. Wąska 4A/3, 87-330 Jabłonowo Pomorskie","dowod":""},{"id":"new_005","name":"Marcin Tworzydło","pesel":"","addr":"ul. Plac Wolności 1/3, 55-050 Sobótka","dowod":""},{"id":"new_006","name":"Dawid Szot","pesel":"91040806394","addr":"ul. Łokietka 1/39, 32-340 Walbrom","dowod":"DAY258132"},{"id":"new_007","name":"Agnieszka Pyrtek","pesel":"86052203226","addr":"Al. Niepodległości 28B/12, 69-100 Słubice","dowod":"DFJ169825"},{"id":"new_008","name":"Kinga Kowszuk","pesel":"97063003389","addr":"ul. Leśna 16, 17-200 Hajnówka","dowod":"DJU146180"},{"id":"new_009","name":"Weronika Gil","pesel":"00323005362","addr":"ul. Bielska 80, 17-200 Hajnówka","dowod":"DHJ568590"}];
 
-let allAgents = LOCAL_AGENTS;
+/* Pośrednicy dopisani ręcznie — zawsze doklejani do listy, również gdy
+   dane przyjdą z Monday. Żeby dodać kolejną osobę, skopiuj linię poniżej. */
+const EXTRA_AGENTS = [
+  {id:"extra_001", name:"Natalia Elżbieta Stępniak", pesel:"95120206322", addr:"ul. Wolska 15/23, 01-201 Warszawa", dowod:"CHI 555381"}
+];
+
+// Doklej EXTRA_AGENTS pomijając duplikaty (po imieniu i nazwisku)
+function withExtraAgents(list) {
+  const have = new Set(list.map(a => (a.name || '').trim().toLowerCase()));
+  const extras = EXTRA_AGENTS.filter(a => !have.has(a.name.trim().toLowerCase()));
+  return [...list, ...extras].sort((a, b) => a.name.localeCompare(b.name, 'pl'));
+}
+
+let allAgents = withExtraAgents(LOCAL_AGENTS);
 
 async function fetchAgents() {
   try {
@@ -746,12 +758,12 @@ async function fetchAgents() {
     } while (cursor);
 
     if (fetched.length > 0) {
-      allAgents = fetched;
-      console.log(`Pośrednicy z Monday: ${fetched.length}`);
+      allAgents = withExtraAgents(fetched);
+      console.log(`Pośrednicy z Monday: ${fetched.length} (+${allAgents.length - fetched.length} dopisanych ręcznie)`);
     }
   } catch(e) {
     console.warn('Błąd pobierania pośredników z Monday, używam lokalnej listy:', e);
-    allAgents = LOCAL_AGENTS;
+    allAgents = withExtraAgents(LOCAL_AGENTS);
   }
 }
 
@@ -1588,8 +1600,11 @@ async function renderHistory() {
       });
       const delBtn = document.createElement('button');
       delBtn.style.cssText = 'padding:2px 7px;font-size:11px;background:var(--red-bg);color:var(--red);border:1px solid #f5c6c6;border-radius:var(--radius);cursor:pointer';
-      delBtn.textContent = '✕';
-      delBtn.addEventListener('click', () => deleteFromHistory(i));
+      delBtn.textContent = 'Usuń';
+      delBtn.title = 'Usuń tę umowę z historii';
+      delBtn.addEventListener('click', () => {
+        if (confirm('Usunąć z historii?\n\n' + (snap.label || 'Umowa ' + (i+1)))) deleteFromHistory(i);
+      });
       row.appendChild(label); row.appendChild(loadBtn); row.appendChild(delBtn);
       list.appendChild(row);
     });
@@ -2176,7 +2191,8 @@ function renderContract() {
   ${buyerBlock()}
   <p style="margin-top:10px">a</p>
   <p style="margin-top:8px">${repNum} Firmą KMBNO Sp. z o. o. z siedzibą przy ul. Twarda 18, 00-105 Warszawa, NIP: 5252862330, REGON: 388950413, KRS: 0000899554, reprezentowaną przy niniejszej umowie przez ${blank(repAccusative||rep.name,'')}${rep.addr ? ' zam. ' + rep.addr.trim() : ''}, ${repLegit} się dowodem osobistym seria i numer: ${repId || bline('80px')}, PESEL: ${repPesel || bline('100px')}, ${repDzial} jako Pełnomocnik spółki KMBNO Sp. z o.o.,</p>
-  <p style="margin-top:6px">zwanym dalej Sprzedającym, zwanymi dalej łącznie Stronami.</p>
+  <p style="margin-top:6px">zwanym dalej Sprzedającym,</p>
+  <p>zwanymi dalej łącznie Stronami.</p>
 
   <div class="par"><div class="par-title">§ 1</div>${par1}</div>
   <div class="par"><div class="par-title">§ 2</div><p>Przedmiotem niniejszej Umowy jest sprzedaż na rzecz Kupującego Nieruchomości, szczegółowo opisanej w § 1 niniejszej Umowy.</p></div>
@@ -2441,18 +2457,43 @@ function switchView(view) {
   }
 }
 
-// Persistent storage helpers
+/* Trwały zapis danych.
+   W artifactach Claude działa window.storage, a na GitHub Pages go NIE MA —
+   dlatego awaryjnie korzystamy z localStorage przeglądarki. */
+const HAS_WIN_STORAGE = (typeof window !== 'undefined' && window.storage &&
+                         typeof window.storage.get === 'function');
+
 async function storageSave(key, value) {
-  try { await window.storage.set(key, value); } catch(e) { console.error('storage save:', e); }
+  try {
+    if (HAS_WIN_STORAGE) { await window.storage.set(key, value); return; }
+    localStorage.setItem(key, value);
+  } catch(e) {
+    console.error('storage save:', e);
+    if (String(e).includes('quota')) alert('Brak miejsca w pamięci przeglądarki — usuń starsze dokumenty lub wpisy historii.');
+  }
 }
 async function storageGet(key) {
-  try { const r = await window.storage.get(key); return r ? r.value : null; } catch(e) { return null; }
+  try {
+    if (HAS_WIN_STORAGE) { const r = await window.storage.get(key); return r ? r.value : null; }
+    return localStorage.getItem(key);
+  } catch(e) { return null; }
 }
 async function storageDelete(key) {
-  try { await window.storage.delete(key); } catch(e) {}
+  try {
+    if (HAS_WIN_STORAGE) { await window.storage.delete(key); return; }
+    localStorage.removeItem(key);
+  } catch(e) {}
 }
 async function storageList(prefix) {
-  try { const r = await window.storage.list(prefix); return r ? r.keys : []; } catch(e) { return []; }
+  try {
+    if (HAS_WIN_STORAGE) { const r = await window.storage.list(prefix); return r ? r.keys : []; }
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!prefix || (k && k.startsWith(prefix))) keys.push(k);
+    }
+    return keys;
+  } catch(e) { return []; }
 }
 
 // Upload obsługa

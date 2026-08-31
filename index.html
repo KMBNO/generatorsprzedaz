@@ -683,7 +683,8 @@ const BOARD_ID = "5030473445";
 const REMOTE_REPS = [
   {name:"Tomasz Drewnik", addr:"ul. Głęboka 88/108, Warszawa", id:"DHM 171555", pesel:"96060408531"},
   {name:"Ewa Dzierzgowska", addr:"ul. Krótka 19, 18-400 Stare Kupiski", id:"CEI929880", pesel:"99030311460"},
-  {name:"Zuzanna Jaszke", addr:"ul. Białej Floty 2 lok. 13, 02-654 Warszawa", id:"CHY 872042", pesel:"01291603303"}
+  {name:"Zuzanna Jaszke", addr:"ul. Białej Floty 2 lok. 13, 02-654 Warszawa", id:"CHY 872042", pesel:"01291603303"},
+  {name:"Natalia Wichrowska", addr:"ul. Księcia Trojdena 13/63, Warszawa", id:"DKG 866443", pesel:"98090103624"}
 ];
 
 let state = { mode:"remote", ownership:"full", buyers:"1", remoteRepIdx:0, localRep:null };
@@ -714,8 +715,7 @@ const LOCAL_AGENTS = [{"id":"2792348500","name":"Paweł Danys","pesel":"","addr"
 /* Pośrednicy dopisani ręcznie — zawsze doklejani do listy, również gdy
    dane przyjdą z Monday. Żeby dodać kolejną osobę, skopiuj linię poniżej. */
 const EXTRA_AGENTS = [
-  {id:"extra_001", name:"Natalia Elżbieta Stępniak", pesel:"95120206322", addr:"ul. Wolska 15/23, 01-201 Warszawa", dowod:"CHI 555381"},
-  {id:"extra_002", name:"Natalia Wichrowska", pesel:"98090103624", addr:"ul. Księcia Trojdena 13/63, Warszawa", dowod:"DKG 866443"}
+  {id:"extra_001", name:"Natalia Elżbieta Stępniak", pesel:"95120206322", addr:"ul. Wolska 15/23, 01-201 Warszawa", dowod:"CHI 555381"}
 ];
 
 // Doklej EXTRA_AGENTS pomijając duplikaty (po imieniu i nazwisku)

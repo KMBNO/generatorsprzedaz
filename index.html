@@ -608,7 +608,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--text); }
 <div class="btn-row">
   <button class="btn btn-primary" onclick="renderContract()">Generuj umowę</button>
   <button class="btn btn-secondary" onclick="downloadPDF()">PDF</button>
-  <button class="btn btn-secondary" id="btnPelnomocnictwo" style="display:none" onclick="showPelnomocnictwo()">Pełnomocnictwo</button>
+  <button class="btn btn-secondary" id="btnPelnomocnictwo" onclick="showPelnomocnictwo()">Pełnomocnictwo</button>
 </div>
 </div><!-- sidebar -->
 
@@ -704,7 +704,7 @@ function initPills(id, key, cb) {
 initPills('modeGroup', 'mode', () => {
   renderRepSection();
   const btn = document.getElementById('btnPelnomocnictwo');
-  if (btn) btn.style.display = state.mode === 'local' ? 'inline-flex' : 'none';
+  if (btn) btn.style.display = 'inline-flex';
 });
 initPills('ownershipGroup', 'ownership', () => { renderPropertyFields(); fillPropFields(); });
 initPills('buyersGroup', 'buyers');
@@ -1133,7 +1133,6 @@ function buildPelnomocnictwoHtml() {
 }
 
 function showPelnomocnictwo() {
-  if (state.mode !== 'local') { alert('Pełnomocnictwo dostępne tylko dla trybu Na miejscu.'); return; }
   const d = buildPelnomocnictwoHtml();
   if (!d) { alert('Najpierw wybierz pełnomocnika.'); return; }
 
@@ -1702,7 +1701,7 @@ async function loadFromHistory(i) {
 
       // Przycisk pełnomocnictwa
       const btnP = document.getElementById('btnPelnomocnictwo');
-      if (btnP) btnP.style.display = state.mode === 'local' ? 'inline-flex' : 'none';
+      if (btnP) btnP.style.display = 'inline-flex';
 
       // Dodatkowe punkty §1
       const bulletsWrap = document.getElementById('extraBulletsWrap');

@@ -1604,19 +1604,42 @@ function getFormSnapshot() {
 
 let historyCache = [];
 
+/* Nazwa umowy = nazwa nieruchomości. Gdy na tę samą nieruchomość powstanie
+   kolejna umowa, dostaje numer: "Bydgoszcz, Sandomierska 37/24 (2)" itd. */
+function propLabel(snap) {
+  const fromMonday = snap.selectedProp?.name?.trim();
+  if (fromMonday) return fromMonday;
+  const city = (snap.pCity || '').trim();
+  const street = (snap.pStreet || '').trim();
+  if (city && street) return `${city}, ${street}`;
+  if (city) return city;
+  if (street) return street;
+  return 'Umowa bez nazwy';
+}
+
 async function saveToHistory() {
   if (!sb || !currentUser) { alert('Musisz być zalogowany, aby zapisać umowę.'); return; }
   const snap = getFormSnapshot();
-  const prop = snap.selectedProp?.name || snap.pCity || 'Umowa';
-  const d = new Date(snap.ts);
-  const label = `${prop} — ${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-  snap.label = label;
+  const base = propLabel(snap);
 
   const btn = document.getElementById('btnSaveHistory');
   const orig = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Zapisywanie...'; }
 
   try {
+    // Sprawdź, ile umów już jest na tę nieruchomość, i nadaj kolejny numer
+    const { data: all, error: errAll } = await sb.from('umowy').select('etykieta');
+    if (errAll) throw errAll;
+    let max = 0;
+    (all || []).forEach(r => {
+      const e = (r.etykieta || '').trim();
+      if (e === base) max = Math.max(max, 1);
+      const m = e.match(/^(.*) \((\d+)\)$/);
+      if (m && m[1] === base) max = Math.max(max, parseInt(m[2], 10));
+    });
+    const label = max === 0 ? base : `${base} (${max + 1})`;
+    snap.label = label;
+
     const { error } = await sb.from('umowy').insert({
       autor: userLabel(currentUser.email),
       etykieta: label,
@@ -1666,7 +1689,9 @@ async function renderHistory() {
 
       const mine = row.autor === userLabel(currentUser.email);
       const author = document.createElement('span');
-      author.textContent = mine ? 'Ty' : row.autor;
+      const dt = row.utworzono ? new Date(row.utworzono) : null;
+      const dstr = dt ? `${String(dt.getDate()).padStart(2,'0')}.${String(dt.getMonth()+1).padStart(2,'0')}.${dt.getFullYear()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '';
+      author.textContent = (mine ? 'Ty' : row.autor) + (dstr ? ' · ' + dstr : '');
       if (mine) author.style.fontWeight = '600';
 
       const btns = document.createElement('span');

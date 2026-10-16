@@ -773,13 +773,54 @@ async function ustawGet(key) {
   return data ? data.wartosc : null;
 }
 
+// Sesja zapamiętana w przeglądarce może być przeterminowana (ktoś nie logował się
+// od tygodni). Zanim poprosimy bazę o dane, odświeżamy ją — inaczej baza odpowie 401
+// i w umowie zostaną puste pola zamiast danych mocodawcy, konta i podpisu.
+async function freshJwt() {
+  try {
+    const { data } = await sb.auth.getSession();
+    const s = data?.session;
+    if (!s) return null;
+    if (!s.expires_at || s.expires_at * 1000 - Date.now() < 60000) {
+      const r = await sb.auth.refreshSession();
+      return r.data?.session?.access_token || null;
+    }
+    return s.access_token;
+  } catch(e) { return null; }
+}
+
+// Zapytanie do bazy; przy odmowie (np. wygasła sesja) odśwież sesję i spróbuj raz jeszcze
+async function sbRetry(run) {
+  await freshJwt();
+  let res = await run();
+  if (res.error) {
+    try { await sb.auth.refreshSession(); } catch(e) {}
+    res = await run();
+  }
+  if (res.error) throw res.error;
+  return res.data;
+}
+
+function showSecretsError(msg) {
+  let el = document.getElementById('secretsErr');
+  if (!msg) { if (el) el.remove(); return; }
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'secretsErr';
+    el.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:9999;max-width:560px;' +
+      'background:#fef3f2;color:#b42318;border:1px solid #fda29b;border-radius:8px;padding:10px 14px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,.12)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+}
+
 async function loadSecrets() {
+  const missing = [];
   try {
     const keys = ['przedwstepna_mocodawca', 'przedwstepna_konto', 'przedwstepna_podpis_b64',
                   'przedwstepna_posrednicy_awaryjni', 'przedwstepna_posrednicy_dodatkowi',
                   'przedwstepna_nieruchomosci_awaryjne'];
-    const { data, error } = await sb.from('ustawienia').select('klucz, wartosc').in('klucz', keys);
-    if (error) throw error;
+    const data = await sbRetry(() => sb.from('ustawienia').select('klucz, wartosc').in('klucz', keys));
     const v = Object.fromEntries((data || []).map(r => [r.klucz, r.wartosc]));
     const moc = v['przedwstepna_mocodawca'];
     if (moc && typeof moc === 'object') MOCODAWCA = Object.assign(MOCODAWCA, cleanDeep(moc));
@@ -794,9 +835,11 @@ async function loadSecrets() {
   } catch(e) {
     console.warn('Nie udało się wczytać ustawień z Supabase:', e.message || e);
   }
+  if (!MOCODAWCA.name) missing.push('dane mocodawcy');
+  if (!ACCOUNT) missing.push('numer konta');
+  if (!PODPIS_B64) missing.push('podpis');
   try {
-    const { data, error } = await sb.from('pelnomocnicy').select('*').order('imie_nazwisko');
-    if (error) throw error;
+    const data = await sbRetry(() => sb.from('pelnomocnicy').select('*').order('imie_nazwisko'));
     REMOTE_REPS = (data || []).map(r => cleanDeep({
       name: r.imie_nazwisko || '', addr: r.adres || '', id: r.dowod || '', pesel: r.pesel || ''
     }));
@@ -804,7 +847,11 @@ async function loadSecrets() {
   } catch(e) {
     console.warn('Nie udało się wczytać pełnomocników:', e.message || e);
     REMOTE_REPS = [];
+    missing.push('pełnomocnicy');
   }
+  showSecretsError(missing.length
+    ? 'Nie wczytano: ' + missing.join(', ') + '. Kliknij „Wyloguj”, zaloguj się ponownie i odśwież stronę (Ctrl+Shift+R).'
+    : null);
 }
 // Token Monday NIE jest już w tym pliku — siedzi jako sekret MONDAY_TOKEN
 // w funkcji "monday" na Supabase. Nie wklejaj go tutaj: ten plik jest publiczny.
@@ -812,8 +859,7 @@ async function loadSecrets() {
 // Przeglądarka nie może odpytywać api.monday.com bezpośrednio (blokada CORS po stronie Monday),
 // więc idziemy przez funkcję "monday" na Supabase. Token Monday jest tam jako sekret.
 async function mondayQuery(board, cursor) {
-  let jwt = null;
-  try { const { data } = await sb.auth.getSession(); jwt = data?.session?.access_token || null; } catch(e) {}
+  const jwt = await freshJwt();
   if (!jwt) { const e = new Error('dane z Monday wczytają się po zalogowaniu'); e.notLoggedIn = true; throw e; }
 
   let res;

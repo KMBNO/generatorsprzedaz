@@ -1,2 +1,10 @@
 PRYWATNE*
 *.prywatne.*
+# pliki robocze, które nie mogą trafić do publicznego repo
+INSTRUKCJA*
+*.xlsx
+*.xls
+*.ods
+*.csv
+*.docx
+*.pdf

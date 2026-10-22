@@ -4,9 +4,10 @@
    Bezpieczeństwo:
      • wpuszcza WYŁĄCZNIE zalogowanych użytkowników Supabase
        (sam klucz publiczny z kodu strony NIE wystarcza),
-     • przeglądarka nie wysyła żadnego zapytania GraphQL — wybiera tylko
-       jedną z dwóch tablic, a zapytanie jest zapisane tutaj na sztywno,
-       więc nie da się nią czytać innych tablic ani niczego zapisać,
+     • generator przedwstępnych wybiera tylko jedną z dwóch tablic
+       (zapytanie jest zapisane tutaj na sztywno),
+     • generator z wykonawcami wysyła własne zapytania, ale funkcja
+       przepuszcza wyłącznie odczyt — żadnego zapisu w Monday,
      • token Monday jest sekretem MONDAY_TOKEN i nie opuszcza serwera.
 
    Wdrożenie: Supabase → Edge Functions → monday → Code → wklej ten plik
@@ -60,15 +61,37 @@ Deno.serve(async (req: Request) => {
   const { data: { user }, error: authErr } = await sb.auth.getUser(jwt);
   if (authErr || !user) return json({ error: 'Nieprawidłowa sesja — zaloguj się ponownie' }, 401);
 
-  // 2. Która tablica
-  let body: { board?: unknown; cursor?: unknown };
+  let body: { board?: unknown; cursor?: unknown; query?: unknown };
   try { body = await req.json(); } catch { return json({ error: 'Nieprawidłowy JSON' }, 400); }
-  const board = typeof body.board === 'string' ? BOARDS[body.board] : undefined;
-  if (!board) return json({ error: 'nieznana tablica: ' + String(body.board ?? '') }, 400);
-  const cursor = typeof body.cursor === 'string' && body.cursor.length < 2000 ? body.cursor : null;
 
   const token = Deno.env.get('MONDAY_TOKEN');
   if (!token) return json({ error: 'Brak sekretu MONDAY_TOKEN w Supabase' }, 500);
+
+  // 2a. Generator umów z wykonawcami: własne zapytanie, ale wyłącznie odczyt.
+  //     Odpowiedź Monday wraca bez zmian (generator sam sprawdza pole "errors").
+  if (typeof body.query === 'string') {
+    const q = body.query.trim();
+    if (!q || q.length > 5000) return json({ error: 'Nieprawidłowe zapytanie' }, 400);
+    if (/\b(mutation|subscription)\b/i.test(q) || !/^(query\b|\{)/i.test(q)) {
+      return json({ error: 'Ta funkcja przepuszcza wyłącznie zapytania odczytujące' }, 403);
+    }
+    try {
+      const res = await fetch('https://api.monday.com/v2', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': token, 'API-Version': '2024-01' },
+        body: JSON.stringify({ query: q }),
+      });
+      const text = await res.text();
+      return new Response(text, { status: res.status, headers: { ...CORS, 'Content-Type': 'application/json' } });
+    } catch (e) {
+      return json({ error: 'Monday nie odpowiada: ' + (e as Error).message }, 502);
+    }
+  }
+
+  // 2b. Generator umów przedwstępnych: jedna z dwóch stałych tablic
+  const board = typeof body.board === 'string' ? BOARDS[body.board] : undefined;
+  if (!board) return json({ error: 'nieznana tablica: ' + String(body.board ?? '') }, 400);
+  const cursor = typeof body.cursor === 'string' && body.cursor.length < 2000 ? body.cursor : null;
 
   // 3. Zapytanie do Monday (stałe, tylko odczyt)
   try {
